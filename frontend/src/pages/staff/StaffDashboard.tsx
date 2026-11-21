@@ -267,7 +267,7 @@ export const StaffDashboard: React.FC = () => {
               <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
             </div>
             <h3 className="font-bold text-slate-900 text-sm">Assigned Lead Worklist</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               Call customers, discuss bank loan schemes, and advance qualified profiles through the pipeline.
             </p>
           </Card3D>
@@ -282,7 +282,7 @@ export const StaffDashboard: React.FC = () => {
               <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
             </div>
             <h3 className="font-bold text-slate-900 text-sm">Scheduled Callbacks</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               View upcoming callback calendars, clear overdue reminders, and record customer notes.
             </p>
           </Card3D>
@@ -297,7 +297,7 @@ export const StaffDashboard: React.FC = () => {
               <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
             </div>
             <h3 className="font-bold text-slate-900 text-sm">Loan Application Tracking</h3>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-600 mt-1 leading-relaxed">
               Route sanctioned loan files to partner banks, monitor underwriting, and track customer disbursals.
             </p>
           </Card3D>
