@@ -7,6 +7,7 @@ import { Pagination } from '@/components/common/Pagination'
 import { Modal } from '@/components/common/Modal'
 import { SkeletonTable } from '@/components/common/LoadingSkeleton'
 import { EmptyState } from '@/components/common/EmptyState'
+import { BankLogo } from '@/components/common/BankLogo'
 
 export const BankManagement: React.FC = () => {
   const queryClient = useQueryClient()
@@ -124,7 +125,9 @@ export const BankManagement: React.FC = () => {
               <tbody className="divide-y divide-slate-100">
                 {banksData.items.map((bank) => (
                   <tr key={bank.id} className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3.5 px-4 font-bold text-slate-900 text-sm">{bank.name}</td>
+                    <td className="py-3.5 px-4">
+                      <BankLogo bank={bank.name} variant="badge" size="sm" showStatus={bank.is_active} />
+                    </td>
                     <td className="py-3.5 px-4 font-mono font-medium text-blue-700">{bank.code}</td>
                     <td className="py-3.5 px-4 text-slate-700">{bank.contact_person || '—'}</td>
                     <td className="py-3.5 px-4 text-slate-600">

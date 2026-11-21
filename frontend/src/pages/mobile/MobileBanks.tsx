@@ -16,6 +16,7 @@ import { Bank, PaginatedResponse } from '@/types'
 import { Modal } from '@/components/common/Modal'
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton'
 import { EmptyState } from '@/components/common/EmptyState'
+import { BankLogo } from '@/components/common/BankLogo'
 
 export const MobileBanks: React.FC = () => {
   const queryClient = useQueryClient()
@@ -151,9 +152,7 @@ export const MobileBanks: React.FC = () => {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="h-9 w-9 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center border border-sky-100 font-bold text-xs uppercase">
-                    {bank.code.slice(0, 3)}
-                  </div>
+                  <BankLogo bank={bank.name} variant="icon" size="md" />
                   <div>
                     <h3 className="font-bold text-slate-900 text-sm">{bank.name}</h3>
                     <div className="text-[11px] text-slate-400 font-mono">Code: {bank.code}</div>
