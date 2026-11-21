@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: loanflow-db
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-loanflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-loanflow_secret_123}
+      POSTGRES_DB: ${POSTGRES_DB:-loanflow_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-loanflow} -d ${POSTGRES_DB:-loanflow_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: loanflow-backend
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - ENVIRONMENT=production
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-loanflow}:${POSTGRES_PASSWORD:-loanflow_secret_123}@db:5432/${POSTGRES_DB:-loanflow_db}
+      - SECRET_KEY=${SECRET_KEY:-c929a75d5e2361b0c03c53ea8f2c08b5e28ffad848b37e8c3b44b8be5658e2bf}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=480
+      - BACKEND_CORS_ORIGINS=["http://localhost", "http://localhost:80", "http://localhost:3000", "http://localhost:5173", "https://*.vercel.app"]
+      - UPLOAD_DIR=/app/storage/documents
+    volumes:
+      - uploaded_documents:/app/storage/documents
+    command: >
+      sh -c "python -m app.db.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: loanflow-frontend
+    restart: always
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+      - "3000:80"
+
+volumes:
+  postgres_data:
+  uploaded_documents:
