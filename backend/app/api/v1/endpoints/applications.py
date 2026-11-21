@@ -4,9 +4,11 @@ import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin_user, get_current_active_user, get_db
+from app.models.employee import Employee
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.loan_application import (
@@ -14,7 +16,7 @@ from app.schemas.loan_application import (
     LoanApplicationResponse,
     LoanApplicationUpdate,
 )
-from app.services import employee_service, loan_application_service
+from app.services import employee_service, lead_service, loan_application_service
 
 router = APIRouter()
 
@@ -63,13 +65,25 @@ async def create_application(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Create loan application (Staff)."""
+    """Create loan application (Staff/Admin)."""
     emp = await employee_service.get_employee_by_user_id(db, current_user.id)
-    if not emp:
-        raise HTTPException(status_code=403, detail="Employee profile required")
+    target_emp_id = emp.id if emp else None
+
+    if not target_emp_id:
+        lead = await lead_service.get_lead(db, data.lead_id)
+        if lead and lead.assigned_employee_id:
+            target_emp_id = lead.assigned_employee_id
+        else:
+            first_emp = await db.execute(select(Employee).where(Employee.is_active == True))
+            emp_rec = first_emp.scalars().first()
+            if emp_rec:
+                target_emp_id = emp_rec.id
+
+    if not target_emp_id:
+        raise HTTPException(status_code=400, detail="No active employee profile available for assignment")
 
     try:
-        return await loan_application_service.create_application(db, data, emp.id)
+        return await loan_application_service.create_application(db, data, target_emp_id)
     except ValueError as ve:
         raise HTTPException(status_code=400, detail=str(ve))
 

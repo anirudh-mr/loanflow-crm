@@ -4,13 +4,15 @@ import uuid
 from typing import Optional
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.deps import get_admin_user, get_current_active_user, get_db
+from app.models.employee import Employee
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.document import DocumentResponse, DocumentVerifyRequest
-from app.services import document_service, employee_service
+from app.services import document_service, employee_service, lead_service
 
 router = APIRouter()
 
@@ -57,7 +59,20 @@ async def upload_document(
 ):
     """Upload customer document."""
     emp = await employee_service.get_employee_by_user_id(db, current_user.id)
-    emp_id = emp.id if emp else current_user.id
+    emp_id = emp.id if emp else None
+
+    if not emp_id:
+        lead = await lead_service.get_lead(db, lead_id)
+        if lead and lead.assigned_employee_id:
+            emp_id = lead.assigned_employee_id
+        else:
+            first_emp = await db.execute(select(Employee).where(Employee.is_active == True))
+            emp_rec = first_emp.scalars().first()
+            if emp_rec:
+                emp_id = emp_rec.id
+
+    if not emp_id:
+        raise HTTPException(status_code=400, detail="No active employee profile available to attribute upload")
 
     try:
         return await document_service.upload_document(

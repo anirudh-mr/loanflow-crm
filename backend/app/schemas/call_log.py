@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class CallLogCreate(BaseModel):
@@ -15,6 +15,13 @@ class CallLogCreate(BaseModel):
     duration_seconds: int
     remarks: Optional[str] = None
     next_follow_up_date: Optional[datetime] = None
+
+    @field_validator("next_follow_up_date", mode="before")
+    @classmethod
+    def empty_date_to_none(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class CallLogResponse(BaseModel):

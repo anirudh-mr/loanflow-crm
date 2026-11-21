@@ -158,19 +158,34 @@ async def get_lead(db: AsyncSession, lead_id: uuid.UUID) -> Optional[Lead]:
 
 async def create_lead(db: AsyncSession, data: LeadCreate) -> Dict[str, Any]:
     """Create a new lead."""
+    emp_type = (
+        data.employment_type.lower()
+        if isinstance(data.employment_type, str)
+        else data.employment_type
+    )
+    priority = (
+        data.priority.lower() if isinstance(data.priority, str) else data.priority
+    )
+    email = data.email if data.email and str(data.email).strip() else None
+    pref_bank = (
+        data.preferred_bank
+        if data.preferred_bank and str(data.preferred_bank).strip()
+        else None
+    )
+
     lead = Lead(
         customer_name=data.customer_name,
         phone=data.phone,
-        email=data.email,
+        email=email,
         city=data.city,
         state=data.state,
-        employment_type=data.employment_type,
+        employment_type=emp_type,
         monthly_income=data.monthly_income,
         loan_type=data.loan_type,
         requested_amount=data.requested_amount,
-        preferred_bank=data.preferred_bank,
+        preferred_bank=pref_bank,
         lead_source=data.lead_source,
-        priority=data.priority,
+        priority=priority,
         status=LeadStatus.NEW,
     )
     db.add(lead)
@@ -190,6 +205,10 @@ async def update_lead(
     update_dict = data.model_dump(exclude_unset=True)
     for key, val in update_dict.items():
         if val is not None:
+            if isinstance(val, str) and not val.strip() and key in ("email", "preferred_bank"):
+                val = None
+            elif key in ("status", "priority", "employment_type") and isinstance(val, str):
+                val = val.lower()
             setattr(lead, key, val)
 
     lead.updated_at = datetime.now(timezone.utc)

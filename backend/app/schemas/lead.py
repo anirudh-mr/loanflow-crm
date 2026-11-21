@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class LeadBase(BaseModel):
@@ -22,6 +22,13 @@ class LeadBase(BaseModel):
     preferred_bank: Optional[str] = None
     lead_source: str
     priority: str = "medium"
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_to_none(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class LeadCreate(LeadBase):
@@ -46,6 +53,13 @@ class LeadUpdate(BaseModel):
     lead_source: Optional[str] = None
     priority: Optional[str] = None
     status: Optional[str] = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def empty_email_to_none(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class LeadResponse(LeadBase):

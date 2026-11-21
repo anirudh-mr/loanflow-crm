@@ -13,6 +13,8 @@ import {
   ArrowUpRight,
   Clock,
   Sparkles,
+  Shield,
+  Landmark,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -28,21 +30,24 @@ import { apiClient } from '@/services/api'
 import { StaffDashboardStats, CallProgress } from '@/types'
 import { LoadingSkeleton } from '@/components/common/LoadingSkeleton'
 import { useAuth } from '@/context/AuthContext'
+import { Card3D } from '@/components/common/Card3D'
 
 interface LeaderboardItem {
-  id: string
-  name: string
   employee_id: string
+  employee_name: string
   department?: string
-  calls_today: number
+  calls: number
   target: number
-  target_pct: number
+  completion_pct: number
+  interested: number
   conversions: number
 }
 
 interface DailyCallPoint {
   date: string
-  calls: number
+  formatted_date?: string
+  count?: number
+  calls?: number
 }
 
 export const StaffPerformance: React.FC = () => {
@@ -61,7 +66,7 @@ export const StaffPerformance: React.FC = () => {
   })
 
   // 3. Daily Call Chart Data (14 Days)
-  const { data: chartData, isLoading: loadingChart } = useQuery<DailyCallPoint[]>({
+  const { data: rawChartData, isLoading: loadingChart } = useQuery<DailyCallPoint[]>({
     queryKey: ['staffDailyCallsTrend'],
     queryFn: () => apiClient.get<DailyCallPoint[]>('/analytics/daily-calls?days=14'),
   })
@@ -72,43 +77,56 @@ export const StaffPerformance: React.FC = () => {
     queryFn: () => apiClient.get<LeaderboardItem[]>('/analytics/leaderboard'),
   })
 
-  const completed = progress?.completed || stats?.calls_completed || 0
-  const target = progress?.target || stats?.daily_call_target || 100
+  const completed = progress?.completed ?? stats?.calls_completed ?? 0
+  const target = progress?.target ?? stats?.daily_call_target ?? 100
   const remaining = Math.max(0, target - completed)
   const pct = Math.min(Math.round((completed / target) * 100), 100)
 
-  // Find user's rank
-  const myRank = leaderboard
-    ? leaderboard.findIndex((item) => item.name === user?.full_name || item.name.includes(user?.full_name || '')) + 1
-    : 0
+  // Safely find user's rank without throwing
+  const userFullName = (user?.full_name || '').toLowerCase().trim()
+  const myRank =
+    leaderboard && Array.isArray(leaderboard) && userFullName
+      ? leaderboard.findIndex((item) => {
+          const empName = (item?.employee_name || '').toLowerCase().trim()
+          return empName.includes(userFullName) || userFullName.includes(empName)
+        }) + 1
+      : 0
+
+  // Format chart data cleanly mapping both count and calls
+  const chartData = (rawChartData || []).map((pt) => ({
+    date: pt.formatted_date || pt.date,
+    calls: pt.calls ?? pt.count ?? 0,
+  }))
 
   return (
-    <div className="space-y-6">
-      {/* Hero Performance Header */}
-      <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-2xl p-6 text-white border border-slate-700 shadow-md">
+    <div className="space-y-6 text-slate-800">
+      {/* Hero Performance Header (Clean Light Theme) */}
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl p-6 border border-slate-200/90 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-semibold border border-emerald-500/30">
-              <Sparkles className="h-3.5 w-3.5" />
-              Official Call Centre KPIs
+          <div className="space-y-2 max-w-xl">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-semibold">
+              <Landmark className="h-3.5 w-3.5 text-slate-700" />
+              <span>OFFICIAL CALL CENTRE PERFORMANCE METRICS</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight">Performance & Shift Analytics</h1>
-            <p className="text-slate-300 text-sm max-w-xl">
-              Track your daily 100-call quota pacing, lead conversion yields, and position on the team leaderboard.
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">
+              Performance & Shift Analytics
+            </h1>
+            <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
+              Track your daily 100-call quota pacing, verified KYC submissions, and rank on the active call centre leaderboard.
             </p>
           </div>
 
           {/* Quick Stat Badge */}
-          <div className="flex items-center gap-4 bg-slate-800/80 backdrop-blur-md px-6 py-4 rounded-xl border border-slate-700">
-            <div className="h-12 w-12 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+          <div className="flex items-center gap-4 bg-slate-50 px-6 py-4 rounded-xl border border-slate-200/90 shadow-2xs">
+            <div className="h-12 w-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-200/60">
               <Trophy className="h-6 w-6" />
             </div>
             <div>
-              <div className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Team Rank</div>
-              <div className="text-2xl font-extrabold text-white">
-                {myRank > 0 ? `#${myRank} of ${leaderboard?.length || 20}` : 'Top Performer'}
+              <div className="text-xs text-slate-500 uppercase tracking-wider font-semibold font-mono">Team Standing</div>
+              <div className="text-2xl font-extrabold text-slate-900 font-mono">
+                {myRank > 0 ? `#${myRank} of ${leaderboard?.length || 20}` : 'Top Tier Agent'}
               </div>
-              <div className="text-[11px] text-emerald-400 font-medium">Active Call Centre Agent</div>
+              <div className="text-[11px] text-emerald-700 font-medium font-mono">Active Outbound Shift</div>
             </div>
           </div>
         </div>
@@ -117,39 +135,39 @@ export const StaffPerformance: React.FC = () => {
       {/* Primary KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Calls Today */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm relative overflow-hidden">
+        <Card3D className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Calls Today</span>
-            <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
               <PhoneCall className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-slate-900">{completed}</span>
-            <span className="text-xs font-medium text-slate-500">/ {target} goal</span>
+            <span className="text-3xl font-extrabold text-slate-900 font-mono">{completed}</span>
+            <span className="text-xs font-medium text-slate-500 font-mono">/ {target} goal</span>
           </div>
-          <div className="mt-3 w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+          <div className="mt-3 w-full bg-slate-200 h-2 rounded-full overflow-hidden">
             <div
-              className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+              className="bg-emerald-600 h-full rounded-full transition-all duration-500"
               style={{ width: `${pct}%` }}
             />
           </div>
-          <div className="mt-2 text-[11px] text-slate-500 flex justify-between">
+          <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-mono">
             <span>{pct}% achieved</span>
-            <span className="font-semibold text-slate-700">{remaining} remaining</span>
+            <span className="font-semibold text-slate-700">{remaining} to go</span>
           </div>
-        </div>
+        </Card3D>
 
         {/* Interested Leads */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <Card3D className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Interested Leads</span>
-            <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-blue-50 text-blue-700 flex items-center justify-center border border-blue-100">
               <TrendingUp className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-blue-600">
+            <span className="text-3xl font-extrabold text-slate-900 font-mono">
               {stats?.interested_customers || 0}
             </span>
             <span className="text-xs font-medium text-slate-500">prospects</span>
@@ -157,69 +175,69 @@ export const StaffPerformance: React.FC = () => {
           <p className="mt-3 text-[11px] text-slate-500">
             High-intent borrowers ready for loan scheme recommendation
           </p>
-        </div>
+        </Card3D>
 
         {/* Active Applications */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <Card3D className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Bank Submissions</span>
-            <div className="h-8 w-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center border border-slate-200">
               <Award className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-indigo-600">
+            <span className="text-3xl font-extrabold text-slate-900 font-mono">
               {stats?.active_applications || 0}
             </span>
             <span className="text-xs font-medium text-slate-500">in underwriting</span>
           </div>
           <p className="mt-3 text-[11px] text-slate-500">
-            Customer applications submitted to lending partners
+            Customer files submitted to institutional banking partners
           </p>
-        </div>
+        </Card3D>
 
         {/* Pending Follow-ups */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+        <Card3D className="p-5">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Follow-ups Today</span>
-            <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+            <div className="h-8 w-8 rounded-lg bg-amber-50 text-amber-700 flex items-center justify-center border border-amber-100">
               <Clock className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3 flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-amber-600">
+            <span className="text-3xl font-extrabold text-slate-900 font-mono">
               {stats?.followups_due_today || 0}
             </span>
             <span className="text-xs font-medium text-slate-500">scheduled</span>
           </div>
-          <div className="mt-3 flex items-center gap-1 text-[11px] text-slate-500">
+          <div className="mt-3 flex items-center gap-1 text-[11px]">
             {stats?.overdue_followups && stats.overdue_followups > 0 ? (
-              <span className="text-rose-600 font-semibold">
+              <span className="text-rose-700 font-semibold font-mono">
                 {stats.overdue_followups} overdue callbacks
               </span>
             ) : (
-              <span className="text-emerald-600 font-semibold">All callbacks up to date</span>
+              <span className="text-emerald-700 font-semibold font-mono">All callbacks up to date</span>
             )}
           </div>
-        </div>
+        </Card3D>
       </div>
 
       {/* Calling Trends Area Chart */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="bg-white/95 backdrop-blur-xl p-6 rounded-2xl border border-slate-200/90 shadow-xs">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
           <div>
             <h3 className="text-base font-bold text-slate-900">14-Day Call Volume Trend</h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-500 mt-0.5">
               Daily customer calls logged against the company standard 100-call benchmark.
             </p>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1.5">
-              <div className="h-3 w-3 rounded-full bg-emerald-500" />
+              <div className="h-3 w-3 rounded-full bg-slate-900" />
               <span className="text-slate-600 font-medium">Daily Calls</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="h-0.5 w-4 bg-rose-500 border-dashed" />
+              <div className="h-0.5 w-4 bg-emerald-600 border-dashed" />
               <span className="text-slate-600 font-medium">100-Call Target</span>
             </div>
           </div>
@@ -230,11 +248,11 @@ export const StaffPerformance: React.FC = () => {
         ) : (
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="callsGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
+                  <linearGradient id="callsMistGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -252,21 +270,22 @@ export const StaffPerformance: React.FC = () => {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#0f172a',
-                    border: 'none',
-                    borderRadius: '8px',
-                    color: '#fff',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '10px',
+                    color: '#0f172a',
                     fontSize: '12px',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.06)',
                   }}
                   formatter={(value: any) => [`${value} calls`, 'Volume']}
                 />
                 <ReferenceLine
                   y={100}
-                  stroke="#ef4444"
+                  stroke="#10b981"
                   strokeDasharray="3 3"
                   label={{
                     value: '100 Target',
-                    fill: '#ef4444',
+                    fill: '#10b981',
                     fontSize: 10,
                     position: 'insideTopRight',
                   }}
@@ -274,10 +293,10 @@ export const StaffPerformance: React.FC = () => {
                 <Area
                   type="monotone"
                   dataKey="calls"
-                  stroke="#10b981"
-                  strokeWidth={2.5}
+                  stroke="#2563eb"
+                  strokeWidth={2}
                   fillOpacity={1}
-                  fill="url(#callsGradient)"
+                  fill="url(#callsMistGradient)"
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -286,13 +305,13 @@ export const StaffPerformance: React.FC = () => {
       </div>
 
       {/* Team Leaderboard Preview */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between">
+      <div className="bg-white/95 backdrop-blur-xl rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden">
+        <div className="p-5 border-b border-slate-200/90 flex items-center justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900">Shift Calling Leaderboard</h3>
-            <p className="text-xs text-slate-500">Live rankings of call centre agents based on calls logged today.</p>
+            <p className="text-xs text-slate-500 mt-0.5">Live rankings of call centre agents based on calls logged today.</p>
           </div>
-          <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+          <span className="text-xs font-semibold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
             Target: 100 Calls / Agent
           </span>
         </div>
@@ -314,68 +333,82 @@ export const StaffPerformance: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-xs text-slate-700">
-                {leaderboard?.slice(0, 10).map((agent, index) => {
-                  const isCurrent =
-                    agent.name === user?.full_name || agent.name.includes(user?.full_name || '')
-                  return (
-                    <tr
-                      key={agent.id}
-                      className={`hover:bg-slate-50/60 transition ${
-                        isCurrent ? 'bg-emerald-50/60 font-semibold' : ''
-                      }`}
-                    >
-                      <td className="py-3.5 px-4 font-mono">
-                        {index === 0 ? (
-                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-400 text-white font-bold text-xs shadow-xs">
-                            1
-                          </span>
-                        ) : index === 1 ? (
-                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-300 text-slate-800 font-bold text-xs">
-                            2
-                          </span>
-                        ) : index === 2 ? (
-                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-700 text-white font-bold text-xs">
-                            3
-                          </span>
-                        ) : (
-                          <span className="text-slate-500 pl-2">#{index + 1}</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="text-slate-900 font-medium flex items-center gap-1.5">
-                          {agent.name}
-                          {isCurrent && (
-                            <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-bold">
-                              YOU
+                {leaderboard && leaderboard.length > 0 ? (
+                  leaderboard.slice(0, 10).map((agent, index) => {
+                    const agentName = agent?.employee_name || agent?.employee_id || ''
+                    const isCurrent =
+                      userFullName &&
+                      (agentName.toLowerCase().includes(userFullName) ||
+                        userFullName.includes(agentName.toLowerCase()))
+
+                    return (
+                      <tr
+                        key={agent.employee_id || index}
+                        className={`hover:bg-slate-50/60 transition ${
+                          isCurrent ? 'bg-emerald-50/60 font-semibold' : ''
+                        }`}
+                      >
+                        <td className="py-3.5 px-4 font-mono">
+                          {index === 0 ? (
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-amber-100 text-amber-800 font-bold text-xs shadow-2xs">
+                              1
                             </span>
+                          ) : index === 1 ? (
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-200 text-slate-800 font-bold text-xs">
+                              2
+                            </span>
+                          ) : index === 2 ? (
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-stone-200 text-stone-800 font-bold text-xs">
+                              3
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 pl-2">#{index + 1}</span>
                           )}
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-mono">
-                          {agent.employee_id}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
-                        {agent.calls_today}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-28 bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div
-                              className="bg-emerald-500 h-full rounded-full"
-                              style={{ width: `${Math.min(agent.target_pct, 100)}%` }}
-                            />
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="text-slate-900 font-medium flex items-center gap-1.5">
+                            {agent.employee_name || agent.employee_id}
+                            {isCurrent && (
+                              <span className="text-[10px] text-emerald-800 bg-emerald-100 px-1.5 py-0.5 rounded font-bold">
+                                YOU
+                              </span>
+                            )}
                           </div>
-                          <span className="font-mono text-slate-600 text-[11px]">
-                            {agent.target_pct}%
+                          <div className="text-[10px] text-slate-400 font-mono">
+                            {agent.employee_id} • {agent.department || 'Sales'}
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 font-bold text-slate-900 font-mono">
+                          {agent.calls ?? 0}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-28 bg-slate-200 h-2 rounded-full overflow-hidden">
+                              <div
+                                className="bg-slate-900 h-full rounded-full"
+                                style={{ width: `${Math.min(agent.completion_pct || 0, 100)}%` }}
+                              />
+                            </div>
+                            <span className="font-mono text-slate-600 text-[11px]">
+                              {agent.completion_pct ?? 0}%
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-medium text-slate-800">
+                          <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
+                            {agent.conversions ?? 0}
                           </span>
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-medium text-slate-800">
-                        {agent.conversions}
-                      </td>
-                    </tr>
-                  )
-                })}
+                        </td>
+                      </tr>
+                    )
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="py-8 text-center text-slate-500">
+                      No active leaderboard data yet
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -384,3 +417,5 @@ export const StaffPerformance: React.FC = () => {
     </div>
   )
 }
+
+export default StaffPerformance

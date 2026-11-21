@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 
 
 class BankBase(BaseModel):
@@ -15,6 +15,13 @@ class BankBase(BaseModel):
     contact_person: Optional[str] = None
     contact_email: Optional[EmailStr] = None
     contact_phone: Optional[str] = None
+
+    @field_validator("contact_email", mode="before")
+    @classmethod
+    def empty_contact_email_to_none(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class BankCreate(BankBase):
@@ -31,6 +38,13 @@ class BankUpdate(BaseModel):
     contact_person: Optional[str] = None
     contact_email: Optional[EmailStr] = None
     contact_phone: Optional[str] = None
+
+    @field_validator("contact_email", mode="before")
+    @classmethod
+    def empty_contact_email_to_none(cls, v):
+        if not v or (isinstance(v, str) and not v.strip()):
+            return None
+        return v
 
 
 class BankResponse(BankBase):

@@ -6,11 +6,13 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from sqlalchemy import select
 from app.core.deps import get_current_active_user, get_db
+from app.models.employee import Employee
 from app.models.user import User
 from app.schemas.call_log import CallLogCreate, CallLogResponse
 from app.schemas.common import PaginatedResponse
-from app.services import call_service, employee_service
+from app.services import call_service, employee_service, lead_service
 
 router = APIRouter()
 
@@ -58,11 +60,19 @@ async def create_call(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Record customer call and update lead & daily progress (Staff)."""
+    """Record customer call and update lead & daily progress (Staff/Admin)."""
     emp = await employee_service.get_employee_by_user_id(db, current_user.id)
     if not emp:
+        lead = await lead_service.get_lead(db, data.lead_id)
+        if lead and lead.assigned_employee:
+            emp = lead.assigned_employee
+        else:
+            first_emp_res = await db.execute(select(Employee).where(Employee.is_active == True))
+            emp = first_emp_res.scalars().first()
+
+    if not emp:
         raise HTTPException(
-            status_code=403, detail="Only staff members with an employee profile can log calls"
+            status_code=400, detail="No active employee profile available to attribute call to"
         )
 
     try:
