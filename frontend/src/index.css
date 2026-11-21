@@ -142,6 +142,31 @@
     100% { transform: translateX(-50%); }
   }
 
+  @keyframes horizontalShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  .animate-shake {
+    animation: horizontalShake 0.4s ease-in-out;
+  }
+
+  @keyframes cardEntrance {
+    0% {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-card-entrance {
+    animation: cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
   .animate-marquee {
     display: flex;
     width: max-content;

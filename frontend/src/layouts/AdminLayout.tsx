@@ -52,7 +52,7 @@ export const AdminLayout: React.FC<{ children: React.ReactNode }> = ({ children 
   return (
     <div className="relative flex h-screen bg-[#f8fafc] font-sans overflow-hidden text-slate-800">
       {/* 3D Banking Ambient Canvas Background */}
-      <AmbientBackground showGrid={true} />
+      <AmbientBackground showGrid={true} theme="light" />
 
       {/* Desktop Sidebar (Clean Alabaster / White) */}
       <aside className="relative z-10 hidden lg:flex flex-col w-64 bg-white/95 backdrop-blur-2xl border-r border-slate-200/90 text-slate-700 select-none shadow-xs">

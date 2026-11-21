@@ -16,7 +16,7 @@ export const ROLES: RoleConfig[] = [
     label: 'Admin',
     email: 'admin@loanflow.demo',
     description: 'Executive oversight, lending targets & bank partner routing',
-    icon: <ShieldCheck className="w-3.5 h-3.5" />,
+    icon: <ShieldCheck className="w-3.5 h-3.5 stroke-[1.75]" />,
   },
   {
     id: 'mobile-admin',
@@ -24,21 +24,21 @@ export const ROLES: RoleConfig[] = [
     email: 'admin@loanflow.demo',
     isMobile: true,
     description: 'Mobile cockpit for on-the-go supervisor review & approvals',
-    icon: <Smartphone className="w-3.5 h-3.5" />,
+    icon: <Smartphone className="w-3.5 h-3.5 stroke-[1.75]" />,
   },
   {
     id: 'agent',
     label: 'Agent',
     email: 'staff1@loanflow.demo',
-    description: '100 calls/day tele-calling desk, lead updates & follow-ups',
-    icon: <PhoneCall className="w-3.5 h-3.5" />,
+    description: '100 calls/day tele-calling desk, customer outreach & loan schemes',
+    icon: <PhoneCall className="w-3.5 h-3.5 stroke-[1.75]" />,
   },
   {
     id: 'kyc-agent',
     label: 'KYC Agent',
     email: 'staff2@loanflow.demo',
-    description: 'Document verification, KYC checks & loan application underwriting',
-    icon: <TrendingUp className="w-3.5 h-3.5" />,
+    description: 'Document verification, KYC collection & loan file underwriting',
+    icon: <TrendingUp className="w-3.5 h-3.5 stroke-[1.75]" />,
   },
 ]
 
@@ -57,11 +57,11 @@ export const RoleTabs: React.FC<RoleTabsProps> = ({
 
   return (
     <div className={`space-y-2.5 ${className}`}>
-      {/* Segmented Control / Pill Tabs */}
+      {/* Segmented Control Track */}
       <div
         role="tablist"
         aria-label="Select Demo Role"
-        className="p-1 rounded-2xl bg-white/[0.03] border border-white/[0.08] grid grid-cols-2 sm:grid-cols-4 gap-1 backdrop-blur-md"
+        className="p-1 rounded-2xl bg-[#E2E8F0]/60 border border-slate-300/60 grid grid-cols-2 sm:grid-cols-4 gap-1 select-none backdrop-blur-xs"
       >
         {ROLES.map((role) => {
           const isSelected = selectedRole === role.id
@@ -74,16 +74,16 @@ export const RoleTabs: React.FC<RoleTabsProps> = ({
               aria-selected={isSelected}
               aria-controls={`panel-${role.id}`}
               onClick={() => onSelectRole(role)}
-              className={`flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-medium transition-all duration-200 select-none ${
+              className={`relative flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
                 isSelected
-                  ? 'bg-indigo-600/30 text-white border border-indigo-500/40 shadow-[0_0_12px_rgba(99,102,241,0.25)]'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.04] border border-transparent'
+                  ? 'bg-[#0F172A] text-white shadow-xs'
+                  : 'text-[#64748B] hover:text-[#0F172A] hover:bg-white/60'
               }`}
             >
-              <span className={isSelected ? 'text-cyan-400' : 'text-slate-500'}>
+              <span className={isSelected ? 'text-white' : 'text-[#64748B]'}>
                 {role.icon}
               </span>
-              <span className="whitespace-nowrap">{role.label}</span>
+              <span className="whitespace-nowrap tracking-tight">{role.label}</span>
             </button>
           )
         })}
@@ -94,7 +94,7 @@ export const RoleTabs: React.FC<RoleTabsProps> = ({
         id={`panel-${activeRole.id}`}
         role="tabpanel"
         aria-labelledby={`tab-${activeRole.id}`}
-        className="text-[12px] text-slate-400 text-center font-normal px-2 truncate transition-opacity duration-200"
+        className="text-[12px] text-[#64748B] text-center font-normal px-2 truncate transition-all duration-200"
       >
         {activeRole.description}
       </div>

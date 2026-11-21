@@ -10,8 +10,8 @@ interface AmbientBackgroundProps {
 }
 
 export const AmbientBackground: React.FC<AmbientBackgroundProps> = ({
-  variant = 'dark',
-  theme = 'dark',
+  variant = 'mist',
+  theme = 'light',
   showGrid = true,
   className = '',
   interactive = true,
