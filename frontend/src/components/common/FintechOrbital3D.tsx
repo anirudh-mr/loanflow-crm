@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useRef } from 'react'
 import * as THREE from 'three'
-import { Sparkles, Activity, ShieldCheck, Zap } from 'lucide-react'
+import { ShieldCheck, Activity, Landmark, ArrowRightLeft } from 'lucide-react'
 
 interface FintechOrbital3DProps {
   className?: string
@@ -14,7 +14,7 @@ interface FintechOrbital3DProps {
 
 export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
   className = '',
-  size = 280,
+  size = 260,
   stats = {
     approvedRate: 88.4,
     activeLeads: 1250,
@@ -24,7 +24,7 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
   const mountRef = useRef<HTMLDivElement>(null)
   const isDragging = useRef(false)
   const previousMousePosition = useRef({ x: 0, y: 0 })
-  const rotationVelocity = useRef({ x: 0.003, y: 0.005 })
+  const rotationVelocity = useRef({ x: 0.002, y: 0.004 })
 
   useEffect(() => {
     const container = mountRef.current
@@ -50,98 +50,79 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000)
     camera.position.z = 85
 
+    // Daylight Studio Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9)
+    scene.add(ambientLight)
+
+    const light1 = new THREE.DirectionalLight(0xfef9f3, 1.2) // Warm daylight
+    light1.position.set(40, 60, 50)
+    scene.add(light1)
+
+    const light2 = new THREE.DirectionalLight(0xe2e8f0, 0.6) // Cool mist fill
+    light2.position.set(-40, -30, -30)
+    scene.add(light2)
+
     const masterGroup = new THREE.Group()
     scene.add(masterGroup)
 
-    // 1. Central Core Sphere (Neon Wireframe + Solid Glow Core)
-    const coreGeo = new THREE.IcosahedronGeometry(14, 2)
-    const coreMat = new THREE.MeshBasicMaterial({
-      color: 0x06b6d4, // Cyan glow
-      wireframe: true,
-      transparent: true,
-      opacity: 0.65,
+    // 1. Central Core Banking Token (Platinum & Champagne Gold)
+    const tokenGeo = new THREE.CylinderGeometry(10, 10, 2.5, 32)
+    const tokenMat = new THREE.MeshStandardMaterial({
+      color: 0xf1f5f9, // Platinum mist
+      metalness: 0.6,
+      roughness: 0.25,
     })
-    const coreSphere = new THREE.Mesh(coreGeo, coreMat)
-    masterGroup.add(coreSphere)
+    const tokenMesh = new THREE.Mesh(tokenGeo, tokenMat)
+    tokenMesh.rotation.x = Math.PI / 2
+    masterGroup.add(tokenMesh)
 
-    // Inner glowing nucleus
-    const innerGeo = new THREE.SphereGeometry(8, 16, 16)
-    const innerMat = new THREE.MeshBasicMaterial({
-      color: 0x8b5cf6, // Violet
-      wireframe: true,
-      transparent: true,
-      opacity: 0.4,
+    // Inner Gold Rim
+    const rimGeo = new THREE.TorusGeometry(8.5, 0.5, 16, 48)
+    const rimMat = new THREE.MeshStandardMaterial({
+      color: 0xc5a880, // Champagne bronze
+      metalness: 0.7,
+      roughness: 0.3,
     })
-    const innerSphere = new THREE.Mesh(innerGeo, innerMat)
-    masterGroup.add(innerSphere)
+    const rimMesh = new THREE.Mesh(rimGeo, rimMat)
+    masterGroup.add(rimMesh)
 
-    // 2. Multi-Axis Concentric Orbital Rings
-    const createRing = (radius: number, tube: number, colorHex: number, rotX: number, rotY: number) => {
-      const ringGeo = new THREE.TorusGeometry(radius, tube, 6, 64)
-      const ringMat = new THREE.MeshBasicMaterial({
+    // 2. Concentric Loan Milestone Orbital Dials
+    const createDial = (radius: number, tube: number, colorHex: number, rotX: number, rotY: number) => {
+      const dialGeo = new THREE.TorusGeometry(radius, tube, 16, 64)
+      const dialMat = new THREE.MeshStandardMaterial({
         color: colorHex,
-        transparent: true,
-        opacity: 0.7,
-        wireframe: false,
+        roughness: 0.35,
+        metalness: 0.4,
       })
-      const ringMesh = new THREE.Mesh(ringGeo, ringMat)
-      ringMesh.rotation.x = rotX
-      ringMesh.rotation.y = rotY
-      return ringMesh
+      const dialMesh = new THREE.Mesh(dialGeo, dialMat)
+      dialMesh.rotation.x = rotX
+      dialMesh.rotation.y = rotY
+      return dialMesh
     }
 
-    const ring1 = createRing(22, 0.45, 0x06b6d4, Math.PI / 4, 0)
-    const ring2 = createRing(28, 0.4, 0x8b5cf6, -Math.PI / 3, Math.PI / 6)
-    const ring3 = createRing(34, 0.35, 0x10b981, Math.PI / 6, Math.PI / 3)
+    // Dial 1: Mist Slate (Origination)
+    const dial1 = createDial(20, 0.45, 0x64748b, Math.PI / 4, 0)
+    // Dial 2: Champagne Bronze (Underwriting)
+    const dial2 = createDial(26, 0.4, 0xb49b78, -Math.PI / 3, Math.PI / 6)
+    // Dial 3: Deep Slate Navy (Disbursement)
+    const dial3 = createDial(32, 0.35, 0x1e293b, Math.PI / 6, Math.PI / 3)
 
-    masterGroup.add(ring1, ring2, ring3)
+    masterGroup.add(dial1, dial2, dial3)
 
-    // 3. Orbiting Data Satellite Nodes (Loan Status Beads)
-    const satelliteGroup = new THREE.Group()
-    masterGroup.add(satelliteGroup)
+    // 3. Floating Banking Satellite Nodes (Disbursement Milestones)
+    const satGroup = new THREE.Group()
+    masterGroup.add(satGroup)
 
-    const satGeo = new THREE.SphereGeometry(1.6, 8, 8)
-    const satMats = [
-      new THREE.MeshBasicMaterial({ color: 0x22d3ee }), // Cyan
-      new THREE.MeshBasicMaterial({ color: 0xc084fc }), // Violet
-      new THREE.MeshBasicMaterial({ color: 0x34d399 }), // Emerald
-      new THREE.MeshBasicMaterial({ color: 0xfbbf24 }), // Amber
-    ]
+    const satGeo = new THREE.SphereGeometry(1.4, 16, 16)
+    const satMat1 = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.5, roughness: 0.3 })
+    const satMat2 = new THREE.MeshStandardMaterial({ color: 0xb49b78, metalness: 0.7, roughness: 0.2 })
+    const satMat3 = new THREE.MeshStandardMaterial({ color: 0x15803d, metalness: 0.4, roughness: 0.3 }) // Muted sage green
 
-    const satellites: THREE.Mesh[] = []
-    const satCount = 4
-    for (let i = 0; i < satCount; i++) {
-      const sat = new THREE.Mesh(satGeo, satMats[i])
-      satellites.push(sat)
-      satelliteGroup.add(sat)
-    }
+    const sat1 = new THREE.Mesh(satGeo, satMat1)
+    const sat2 = new THREE.Mesh(satGeo, satMat2)
+    const sat3 = new THREE.Mesh(satGeo, satMat3)
 
-    // 4. Ambient Sparkle Dust
-    const dustCount = 80
-    const dustGeo = new THREE.BufferGeometry()
-    const dustPositions = new Float32Array(dustCount * 3)
-
-    for (let i = 0; i < dustCount; i++) {
-      const i3 = i * 3
-      const radius = 30 + Math.random() * 25
-      const theta = Math.random() * Math.PI * 2
-      const phi = Math.acos(Math.random() * 2 - 1)
-
-      dustPositions[i3] = radius * Math.sin(phi) * Math.cos(theta)
-      dustPositions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta)
-      dustPositions[i3 + 2] = radius * Math.cos(phi)
-    }
-
-    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPositions, 3))
-    const dustMat = new THREE.PointsMaterial({
-      size: 2,
-      color: 0x38bdf8,
-      transparent: true,
-      opacity: 0.6,
-      blending: THREE.AdditiveBlending,
-    })
-    const dustPoints = new THREE.Points(dustGeo, dustMat)
-    masterGroup.add(dustPoints)
+    satGroup.add(sat1, sat2, sat3)
 
     // -------------------------------------------------------------
     // Interactive Drag to Rotate
@@ -156,12 +137,12 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
       const deltaX = e.clientX - previousMousePosition.current.x
       const deltaY = e.clientY - previousMousePosition.current.y
 
-      masterGroup.rotation.y += deltaX * 0.015
-      masterGroup.rotation.x += deltaY * 0.015
+      masterGroup.rotation.y += deltaX * 0.012
+      masterGroup.rotation.x += deltaY * 0.012
 
       rotationVelocity.current = {
-        x: deltaY * 0.002,
-        y: deltaX * 0.002,
+        x: deltaY * 0.0015,
+        y: deltaX * 0.0015,
       }
 
       previousMousePosition.current = { x: e.clientX, y: e.clientY }
@@ -176,7 +157,7 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
     window.addEventListener('mousemove', onMouseMove)
     window.addEventListener('mouseup', onMouseUp)
 
-    // Touch support for mobile devices
+    // Touch support
     const onTouchStart = (e: TouchEvent) => {
       if (e.touches.length === 1) {
         isDragging.current = true
@@ -189,8 +170,8 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
       const deltaX = e.touches[0].clientX - previousMousePosition.current.x
       const deltaY = e.touches[0].clientY - previousMousePosition.current.y
 
-      masterGroup.rotation.y += deltaX * 0.015
-      masterGroup.rotation.x += deltaY * 0.015
+      masterGroup.rotation.y += deltaX * 0.012
+      masterGroup.rotation.x += deltaY * 0.012
 
       previousMousePosition.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }
     }
@@ -207,40 +188,31 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
     // Animation Render Loop
     // -------------------------------------------------------------
     let animationFrameId: number
-    let clock = new THREE.Clock()
+    const clock = new THREE.Clock()
 
     const animate = () => {
       animationFrameId = requestAnimationFrame(animate)
       const elapsed = clock.getElapsedTime()
 
-      // Inertia decay
       if (!isDragging.current) {
         masterGroup.rotation.y += rotationVelocity.current.y
         masterGroup.rotation.x += rotationVelocity.current.x
         rotationVelocity.current.y *= 0.985
         rotationVelocity.current.x *= 0.985
-        if (Math.abs(rotationVelocity.current.y) < 0.004) rotationVelocity.current.y = 0.004
-        if (Math.abs(rotationVelocity.current.x) < 0.002) rotationVelocity.current.x = 0.002
+        if (Math.abs(rotationVelocity.current.y) < 0.003) rotationVelocity.current.y = 0.003
+        if (Math.abs(rotationVelocity.current.x) < 0.0015) rotationVelocity.current.x = 0.0015
       }
 
-      // Orbital animations
-      ring1.rotation.z = elapsed * 0.8
-      ring2.rotation.z = -elapsed * 0.6
-      ring3.rotation.z = elapsed * 0.4
+      dial1.rotation.z = elapsed * 0.5
+      dial2.rotation.z = -elapsed * 0.4
+      dial3.rotation.z = elapsed * 0.3
 
-      coreSphere.rotation.y = elapsed * 0.2
-      coreSphere.rotation.x = Math.sin(elapsed * 0.3) * 0.2
-      innerSphere.rotation.y = -elapsed * 0.4
+      tokenMesh.rotation.z = elapsed * 0.2
+      rimMesh.rotation.z = -elapsed * 0.2
 
-      // Orbiting satellites
-      satellites[0].position.set(Math.cos(elapsed * 1.2) * 22, Math.sin(elapsed * 1.2) * 22, 0)
-      satellites[1].position.set(0, Math.cos(elapsed * 0.9) * 28, Math.sin(elapsed * 0.9) * 28)
-      satellites[2].position.set(Math.cos(elapsed * 0.7) * 34, 0, Math.sin(elapsed * 0.7) * 34)
-      satellites[3].position.set(
-        Math.cos(elapsed * 1.5) * 18,
-        Math.sin(elapsed * 1.5) * 18,
-        Math.sin(elapsed * 1.5) * 12
-      )
+      sat1.position.set(Math.cos(elapsed * 0.9) * 20, Math.sin(elapsed * 0.9) * 20, 0)
+      sat2.position.set(0, Math.cos(elapsed * 0.7) * 26, Math.sin(elapsed * 0.7) * 26)
+      sat3.position.set(Math.cos(elapsed * 0.5) * 32, 0, Math.sin(elapsed * 0.5) * 32)
 
       renderer.render(scene, camera)
     }
@@ -260,13 +232,14 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
         container.removeChild(renderer.domElement)
       }
 
-      coreGeo.dispose()
-      coreMat.dispose()
-      innerGeo.dispose()
-      innerMat.dispose()
+      tokenGeo.dispose()
+      tokenMat.dispose()
+      rimGeo.dispose()
+      rimMat.dispose()
       satGeo.dispose()
-      dustGeo.dispose()
-      dustMat.dispose()
+      satMat1.dispose()
+      satMat2.dispose()
+      satMat3.dispose()
       renderer.dispose()
     }
   }, [size])
@@ -275,31 +248,31 @@ export const FintechOrbital3D: React.FC<FintechOrbital3DProps> = ({
     <div
       className={`relative flex flex-col items-center justify-center select-none group cursor-grab active:cursor-grabbing ${className}`}
     >
-      {/* 3D WebGL Canvas Container */}
+      {/* 3D WebGL Canvas */}
       <div
         ref={mountRef}
         style={{ width: size, height: size }}
-        className="relative z-10 filter drop-shadow-[0_0_35px_rgba(6,182,212,0.35)]"
+        className="relative z-10 filter drop-shadow-[0_4px_16px_rgba(15,23,42,0.06)]"
       />
 
-      {/* Floating Holographic Telemetry HUD Badges */}
-      <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-cyan-500/40 text-[10px] text-cyan-300 font-mono shadow-lg">
-        <Sparkles className="h-3 w-3 text-cyan-400 animate-spin-slow" />
-        <span>3D QUANTUM CORE</span>
+      {/* Clean Minimalist Light Banking Telemetry Badges */}
+      <div className="absolute top-2 left-2 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 text-[10px] text-slate-700 font-semibold shadow-xs">
+        <Landmark className="h-3 w-3 text-slate-600" />
+        <span>BANKING CORE</span>
       </div>
 
-      <div className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-emerald-500/40 text-[10px] text-emerald-300 font-mono shadow-lg">
-        <ShieldCheck className="h-3 w-3 text-emerald-400" />
+      <div className="absolute bottom-2 right-2 z-20 flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-emerald-200 text-[10px] text-emerald-800 font-semibold shadow-xs">
+        <ShieldCheck className="h-3 w-3 text-emerald-600" />
         <span>{stats.approvedRate}% APPROVAL</span>
       </div>
 
-      <div className="absolute bottom-2 left-2 z-20 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-purple-500/40 text-[10px] text-purple-300 font-mono shadow-lg">
-        <Activity className="h-3 w-3 text-purple-400 animate-pulse" />
+      <div className="absolute bottom-2 left-2 z-20 hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-md border border-slate-200 text-[10px] text-slate-600 font-semibold shadow-xs">
+        <ArrowRightLeft className="h-3 w-3 text-slate-500" />
         <span>{stats.processingSpeed} ROUTE</span>
       </div>
 
-      <p className="text-[10px] text-slate-400 mt-1 font-mono tracking-wider uppercase opacity-70 group-hover:opacity-100 transition-opacity">
-        Drag to rotate 3D orbital loan engine
+      <p className="text-[10px] text-slate-500 mt-1 font-medium tracking-wide uppercase opacity-75 group-hover:opacity-100 transition-opacity">
+        Interactive 3D Capital & Loan Milestone Sculpture
       </p>
     </div>
   )

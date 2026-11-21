@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react'
 interface Card3DProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
   className?: string
-  glowColor?: 'cyan' | 'purple' | 'emerald' | 'amber' | 'blue'
+  accentColor?: 'slate' | 'mist' | 'navy' | 'emerald' | 'amber' | 'blue'
   maxTilt?: number
   enableGlare?: boolean
 }
@@ -11,22 +11,14 @@ interface Card3DProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Card3D: React.FC<Card3DProps> = ({
   children,
   className = '',
-  glowColor = 'cyan',
-  maxTilt = 7,
+  accentColor = 'slate',
+  maxTilt = 4,
   enableGlare = true,
   ...props
 }) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const [style, setStyle] = useState<React.CSSProperties>({})
   const [glarePosition, setGlarePosition] = useState({ x: 50, y: 50, opacity: 0 })
-
-  const glowStyles = {
-    cyan: 'hover:border-cyan-500/50 hover:shadow-[0_0_25px_rgba(6,182,212,0.25)]',
-    purple: 'hover:border-purple-500/50 hover:shadow-[0_0_25px_rgba(168,85,247,0.25)]',
-    emerald: 'hover:border-emerald-500/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)]',
-    amber: 'hover:border-amber-500/50 hover:shadow-[0_0_25px_rgba(245,158,11,0.25)]',
-    blue: 'hover:border-blue-500/50 hover:shadow-[0_0_25px_rgba(59,130,246,0.25)]',
-  }
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!cardRef.current) return
@@ -42,7 +34,7 @@ export const Card3D: React.FC<Card3DProps> = ({
     const rotateY = ((x - centerX) / centerX) * maxTilt
 
     setStyle({
-      transform: `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(6px)`,
+      transform: `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) translateZ(4px)`,
       transition: 'transform 0.08s ease-out',
     })
 
@@ -50,7 +42,7 @@ export const Card3D: React.FC<Card3DProps> = ({
       setGlarePosition({
         x: (x / rect.width) * 100,
         y: (y / rect.height) * 100,
-        opacity: 0.18,
+        opacity: 0.12,
       })
     }
   }
@@ -58,7 +50,7 @@ export const Card3D: React.FC<Card3DProps> = ({
   const handleMouseLeave = () => {
     setStyle({
       transform: 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)',
-      transition: 'transform 0.5s ease-out',
+      transition: 'transform 0.4s ease-out',
     })
     setGlarePosition((prev) => ({ ...prev, opacity: 0 }))
   }
@@ -69,21 +61,18 @@ export const Card3D: React.FC<Card3DProps> = ({
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={style}
-      className={`relative overflow-hidden rounded-2xl bg-slate-900/70 backdrop-blur-xl border border-slate-700/60 shadow-xl transition-all duration-300 ${glowStyles[glowColor]} ${className}`}
+      className={`relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_-6px_rgba(15,23,42,0.08)] hover:border-slate-300 transition-all duration-300 text-slate-900 ${className}`}
       {...props}
     >
-      {/* Specular Radial Glare Reflection */}
+      {/* Specular Soft Daylight Sheen */}
       {enableGlare && (
         <div
           className="pointer-events-none absolute -inset-px transition-opacity duration-300 will-change-[opacity]"
           style={{
-            background: `radial-gradient(circle 260px at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, ${glarePosition.opacity}), transparent 80%)`,
+            background: `radial-gradient(circle 240px at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, ${glarePosition.opacity}), transparent 80%)`,
           }}
         />
       )}
-
-      {/* Top subtle light rim */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
       {/* Card Content */}
       <div className="relative z-10">{children}</div>
