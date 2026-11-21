@@ -1,261 +1,256 @@
 -- ==============================================================================
--- LoanFlow CRM - 100% Exact Supabase PostgreSQL Schema
--- Perfectly matched to SQLAlchemy 2.0 ORM Models
+-- LoanFlow CRM - 100% Exact Supabase PostgreSQL DDL
+-- Generated directly from SQLAlchemy ORM metadata
 -- ==============================================================================
 
--- 1. Enable UUID Extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 2. Drop existing tables if re-initializing
-DROP TABLE IF EXISTS application_status_history CASCADE;
-DROP TABLE IF EXISTS loan_applications CASCADE;
-DROP TABLE IF EXISTS lead_assignments CASCADE;
-DROP TABLE IF EXISTS follow_ups CASCADE;
-DROP TABLE IF EXISTS documents CASCADE;
-DROP TABLE IF EXISTS call_logs CASCADE;
-DROP TABLE IF EXISTS leads CASCADE;
-DROP TABLE IF EXISTS daily_targets CASCADE;
-DROP TABLE IF EXISTS loan_schemes CASCADE;
-DROP TABLE IF EXISTS employees CASCADE;
-DROP TABLE IF EXISTS activity_logs CASCADE;
-DROP TABLE IF EXISTS users CASCADE;
-DROP TABLE IF EXISTS banks CASCADE;
+-- 1. Reset Schema cleanly
+DROP SCHEMA IF EXISTS public CASCADE;
+CREATE SCHEMA public;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO public;
+GRANT ALL ON SCHEMA public TO anon;
+GRANT ALL ON SCHEMA public TO authenticated;
+GRANT ALL ON SCHEMA public TO service_role;
 
--- 3. Create Custom Enum Types
-DO $$ BEGIN
-    CREATE TYPE user_role AS ENUM ('admin', 'staff');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
+-- 2. Create Enums with Exact SQLAlchemy Uppercase Values
+CREATE TYPE user_role AS ENUM ('ADMIN', 'STAFF');
+CREATE TYPE employment_type AS ENUM ('SALARIED', 'SELF_EMPLOYED', 'BUSINESS', 'FREELANCER', 'RETIRED', 'OTHER');
+CREATE TYPE lead_status AS ENUM ('NEW', 'ASSIGNED', 'CONTACTED', 'INTERESTED', 'NOT_INTERESTED', 'FOLLOW_UP_REQUIRED', 'DOCUMENTS_PENDING', 'APPLICATION_SUBMITTED', 'CONVERTED', 'CLOSED');
+CREATE TYPE lead_priority AS ENUM ('LOW', 'MEDIUM', 'HIGH', 'URGENT');
+CREATE TYPE call_outcome AS ENUM ('INTERESTED', 'NOT_INTERESTED', 'NO_ANSWER', 'BUSY', 'CALL_BACK_LATER', 'WRONG_NUMBER', 'FOLLOW_UP_REQUIRED');
+CREATE TYPE document_category AS ENUM ('AADHAAR', 'PAN', 'SALARY_SLIP', 'BANK_STATEMENT', 'ADDRESS_PROOF', 'EMPLOYMENT_PROOF', 'OTHER');
+CREATE TYPE verification_status AS ENUM ('PENDING', 'VERIFIED', 'REJECTED');
+CREATE TYPE follow_up_status AS ENUM ('PENDING', 'COMPLETED', 'OVERDUE', 'RESCHEDULED');
+CREATE TYPE application_status AS ENUM ('DRAFT', 'DOCUMENTS_PENDING', 'READY_FOR_SUBMISSION', 'SUBMITTED_TO_BANK', 'UNDER_BANK_REVIEW', 'ADDITIONAL_INFO_REQUIRED', 'APPROVED', 'REJECTED', 'DISBURSED', 'CLOSED');
 
-DO $$ BEGIN
-    CREATE TYPE employment_type AS ENUM ('salaried', 'self_employed', 'business', 'freelancer', 'retired', 'other');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE lead_status AS ENUM ('new', 'assigned', 'contacted', 'interested', 'not_interested', 'follow_up_required', 'documents_pending', 'application_submitted', 'converted', 'closed');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE lead_priority AS ENUM ('low', 'medium', 'high', 'urgent');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE call_outcome AS ENUM ('interested', 'not_interested', 'no_answer', 'busy', 'call_back_later', 'wrong_number', 'follow_up_required');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE document_category AS ENUM ('aadhaar', 'pan', 'salary_slip', 'bank_statement', 'address_proof', 'employment_proof', 'other');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE verification_status AS ENUM ('pending', 'verified', 'rejected');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE follow_up_status AS ENUM ('pending', 'completed', 'overdue', 'rescheduled');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
-DO $$ BEGIN
-    CREATE TYPE application_status AS ENUM ('draft', 'documents_pending', 'ready_for_submission', 'submitted_to_bank', 'under_bank_review', 'additional_info_required', 'approved', 'rejected', 'disbursed', 'closed');
-EXCEPTION WHEN duplicate_object THEN null; END $$;
-
--- 4. Banks Table
+-- 3. Create Tables
+-- Table: banks
 CREATE TABLE banks (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name VARCHAR(255) NOT NULL,
-    code VARCHAR(50) UNIQUE NOT NULL,
-    contact_person VARCHAR(255),
-    contact_email VARCHAR(255),
-    contact_phone VARCHAR(20),
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	name VARCHAR(255) NOT NULL, 
+	code VARCHAR(50) NOT NULL, 
+	contact_person VARCHAR(255), 
+	contact_email VARCHAR(255), 
+	contact_phone VARCHAR(20), 
+	is_active BOOLEAN NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
 );
 
--- 5. Users Table
+-- Table: users
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    full_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20),
-    role user_role NOT NULL DEFAULT 'staff',
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	email VARCHAR(255) NOT NULL, 
+	password_hash VARCHAR(255) NOT NULL, 
+	full_name VARCHAR(255) NOT NULL, 
+	phone VARCHAR(20), 
+	role user_role NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id)
 );
 
-CREATE INDEX idx_users_email ON users(email);
-
--- 6. Activity Logs Table
+-- Table: activity_logs
 CREATE TABLE activity_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    action VARCHAR(255) NOT NULL,
-    entity_type VARCHAR(100) NOT NULL,
-    entity_id INTEGER,
-    details JSON,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	user_id UUID NOT NULL, 
+	action VARCHAR(255) NOT NULL, 
+	entity_type VARCHAR(100) NOT NULL, 
+	entity_id INTEGER, 
+	details JSON, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
--- 7. Employees Table
+-- Table: employees
 CREATE TABLE employees (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID UNIQUE NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    employee_id VARCHAR(50) UNIQUE NOT NULL,
-    department VARCHAR(100) DEFAULT 'Sales & Calling',
-    joining_date DATE DEFAULT CURRENT_DATE,
-    daily_call_target INTEGER NOT NULL DEFAULT 100,
-    is_active BOOLEAN NOT NULL DEFAULT true
+	id UUID NOT NULL, 
+	user_id UUID NOT NULL, 
+	employee_id VARCHAR(50) NOT NULL, 
+	department VARCHAR(100), 
+	joining_date DATE, 
+	daily_call_target INTEGER NOT NULL, 
+	is_active BOOLEAN NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (user_id), 
+	FOREIGN KEY(user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_employees_emp_id ON employees(employee_id);
-
--- 8. Loan Schemes Catalog
+-- Table: loan_schemes
 CREATE TABLE loan_schemes (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    bank_id UUID NOT NULL REFERENCES banks(id) ON DELETE CASCADE,
-    scheme_name VARCHAR(255) NOT NULL,
-    loan_category VARCHAR(100),
-    min_amount NUMERIC(15, 2) DEFAULT 10000.00,
-    max_amount NUMERIC(15, 2) DEFAULT 10000000.00,
-    interest_rate NUMERIC(5, 2) NOT NULL,
-    min_tenure_months INTEGER DEFAULT 6,
-    max_tenure_months INTEGER DEFAULT 360,
-    eligibility_info TEXT,
-    is_active BOOLEAN NOT NULL DEFAULT true,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	bank_id UUID NOT NULL, 
+	scheme_name VARCHAR(255) NOT NULL, 
+	loan_category VARCHAR(100), 
+	min_amount NUMERIC(15, 2), 
+	max_amount NUMERIC(15, 2), 
+	interest_rate NUMERIC(5, 2), 
+	min_tenure_months INTEGER, 
+	max_tenure_months INTEGER, 
+	eligibility_info TEXT, 
+	is_active BOOLEAN NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(bank_id) REFERENCES banks (id) ON DELETE CASCADE
 );
 
--- 9. Daily Targets Table
+-- Table: daily_targets
 CREATE TABLE daily_targets (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-    date DATE NOT NULL DEFAULT CURRENT_DATE,
-    target_calls INTEGER NOT NULL DEFAULT 100,
-    calls_completed INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    CONSTRAINT uq_daily_target_employee_date UNIQUE (employee_id, date)
+	id UUID NOT NULL, 
+	employee_id UUID NOT NULL, 
+	date DATE NOT NULL, 
+	target_calls INTEGER NOT NULL, 
+	calls_completed INTEGER NOT NULL, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	CONSTRAINT uq_daily_target_employee_date UNIQUE (employee_id, date), 
+	FOREIGN KEY(employee_id) REFERENCES employees (id) ON DELETE CASCADE
 );
 
--- 10. Customer Leads Table
+-- Table: leads
 CREATE TABLE leads (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    customer_name VARCHAR(255) NOT NULL,
-    phone VARCHAR(20) NOT NULL,
-    email VARCHAR(255),
-    city VARCHAR(100),
-    state VARCHAR(100),
-    employment_type employment_type,
-    monthly_income NUMERIC(15, 2),
-    loan_type VARCHAR(100),
-    requested_amount NUMERIC(15, 2),
-    preferred_bank VARCHAR(255),
-    lead_source VARCHAR(100),
-    assigned_employee_id UUID REFERENCES employees(id) ON DELETE SET NULL,
-    status lead_status NOT NULL DEFAULT 'new',
-    priority lead_priority NOT NULL DEFAULT 'medium',
-    last_contact_date TIMESTAMPTZ,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	customer_name VARCHAR(255) NOT NULL, 
+	phone VARCHAR(20) NOT NULL, 
+	email VARCHAR(255), 
+	city VARCHAR(100), 
+	state VARCHAR(100), 
+	employment_type employment_type, 
+	monthly_income NUMERIC(15, 2), 
+	loan_type VARCHAR(100), 
+	requested_amount NUMERIC(15, 2), 
+	preferred_bank VARCHAR(255), 
+	lead_source VARCHAR(100), 
+	assigned_employee_id UUID, 
+	status lead_status NOT NULL, 
+	priority lead_priority NOT NULL, 
+	last_contact_date TIMESTAMP WITH TIME ZONE, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(assigned_employee_id) REFERENCES employees (id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_leads_phone ON leads(phone);
-CREATE INDEX idx_leads_status ON leads(status);
-CREATE INDEX idx_leads_assigned ON leads(assigned_employee_id);
-
--- 11. Call Logs Table
+-- Table: call_logs
 CREATE TABLE call_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-    call_datetime TIMESTAMPTZ NOT NULL DEFAULT now(),
-    duration_seconds INTEGER DEFAULT 0,
-    outcome call_outcome NOT NULL,
-    remarks TEXT,
-    next_follow_up_date TIMESTAMPTZ
+	id UUID NOT NULL, 
+	lead_id UUID NOT NULL, 
+	employee_id UUID NOT NULL, 
+	call_datetime TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	duration_seconds INTEGER, 
+	outcome call_outcome NOT NULL, 
+	remarks TEXT, 
+	next_follow_up_date TIMESTAMP WITH TIME ZONE, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(lead_id) REFERENCES leads (id) ON DELETE CASCADE, 
+	FOREIGN KEY(employee_id) REFERENCES employees (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_calls_lead ON call_logs(lead_id);
-CREATE INDEX idx_calls_emp ON call_logs(employee_id);
-
--- 12. KYC Documents Table
+-- Table: documents
 CREATE TABLE documents (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-    uploaded_by UUID NOT NULL REFERENCES employees(id) ON DELETE SET NULL,
-    category document_category NOT NULL,
-    file_name VARCHAR(255) NOT NULL,
-    file_path VARCHAR(500) NOT NULL,
-    file_size INTEGER,
-    mime_type VARCHAR(100),
-    verification_status verification_status NOT NULL DEFAULT 'pending',
-    verified_by UUID REFERENCES users(id) ON DELETE SET NULL,
-    verified_at TIMESTAMPTZ,
-    rejection_remarks TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	lead_id UUID NOT NULL, 
+	uploaded_by UUID NOT NULL, 
+	category document_category NOT NULL, 
+	file_name VARCHAR(255) NOT NULL, 
+	file_path VARCHAR(500) NOT NULL, 
+	file_size INTEGER, 
+	mime_type VARCHAR(100), 
+	verification_status verification_status NOT NULL, 
+	verified_by UUID, 
+	verified_at TIMESTAMP WITH TIME ZONE, 
+	rejection_remarks TEXT, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(lead_id) REFERENCES leads (id) ON DELETE CASCADE, 
+	FOREIGN KEY(uploaded_by) REFERENCES employees (id) ON DELETE SET NULL, 
+	FOREIGN KEY(verified_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_documents_lead ON documents(lead_id);
-
--- 13. Follow-Ups Table
+-- Table: follow_ups
 CREATE TABLE follow_ups (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-    scheduled_date TIMESTAMPTZ NOT NULL,
-    completed_date TIMESTAMPTZ,
-    status follow_up_status NOT NULL DEFAULT 'pending',
-    remarks TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	lead_id UUID NOT NULL, 
+	employee_id UUID NOT NULL, 
+	scheduled_date TIMESTAMP WITH TIME ZONE NOT NULL, 
+	completed_date TIMESTAMP WITH TIME ZONE, 
+	status follow_up_status NOT NULL, 
+	remarks TEXT, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(lead_id) REFERENCES leads (id) ON DELETE CASCADE, 
+	FOREIGN KEY(employee_id) REFERENCES employees (id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_followups_emp ON follow_ups(employee_id);
-
--- 14. Lead Assignments Audit Table
+-- Table: lead_assignments
 CREATE TABLE lead_assignments (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-    assigned_by UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-    assigned_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    unassigned_at TIMESTAMPTZ,
-    is_active BOOLEAN NOT NULL DEFAULT true
+	id UUID NOT NULL, 
+	lead_id UUID NOT NULL, 
+	employee_id UUID NOT NULL, 
+	assigned_by UUID NOT NULL, 
+	assigned_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	unassigned_at TIMESTAMP WITH TIME ZONE, 
+	is_active BOOLEAN NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(lead_id) REFERENCES leads (id) ON DELETE CASCADE, 
+	FOREIGN KEY(employee_id) REFERENCES employees (id) ON DELETE CASCADE, 
+	FOREIGN KEY(assigned_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
--- 15. Loan Applications Table
+-- Table: loan_applications
 CREATE TABLE loan_applications (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lead_id UUID NOT NULL REFERENCES leads(id) ON DELETE CASCADE,
-    employee_id UUID NOT NULL REFERENCES employees(id) ON DELETE CASCADE,
-    bank_id UUID NOT NULL REFERENCES banks(id) ON DELETE CASCADE,
-    loan_scheme_id UUID REFERENCES loan_schemes(id) ON DELETE SET NULL,
-    requested_amount NUMERIC(15, 2) NOT NULL,
-    approved_amount NUMERIC(15, 2),
-    application_date TIMESTAMPTZ NOT NULL DEFAULT now(),
-    status application_status NOT NULL DEFAULT 'draft',
-    remarks TEXT,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	lead_id UUID NOT NULL, 
+	employee_id UUID NOT NULL, 
+	bank_id UUID NOT NULL, 
+	loan_scheme_id UUID, 
+	requested_amount NUMERIC(15, 2) NOT NULL, 
+	approved_amount NUMERIC(15, 2), 
+	application_date TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	status application_status NOT NULL, 
+	remarks TEXT, 
+	created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(lead_id) REFERENCES leads (id) ON DELETE CASCADE, 
+	FOREIGN KEY(employee_id) REFERENCES employees (id) ON DELETE CASCADE, 
+	FOREIGN KEY(bank_id) REFERENCES banks (id) ON DELETE CASCADE, 
+	FOREIGN KEY(loan_scheme_id) REFERENCES loan_schemes (id) ON DELETE SET NULL
 );
 
-CREATE INDEX idx_applications_lead ON loan_applications(lead_id);
-CREATE INDEX idx_applications_emp ON loan_applications(employee_id);
-CREATE INDEX idx_applications_status ON loan_applications(status);
-
--- 16. Application Status History Table
+-- Table: application_status_history
 CREATE TABLE application_status_history (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    application_id UUID NOT NULL REFERENCES loan_applications(id) ON DELETE CASCADE,
-    old_status VARCHAR(50),
-    new_status VARCHAR(50) NOT NULL,
-    changed_by UUID NOT NULL REFERENCES users(id) ON DELETE SET NULL,
-    remarks TEXT,
-    changed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+	id UUID NOT NULL, 
+	application_id UUID NOT NULL, 
+	old_status VARCHAR(50), 
+	new_status VARCHAR(50) NOT NULL, 
+	changed_by UUID NOT NULL, 
+	remarks TEXT, 
+	changed_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL, 
+	PRIMARY KEY (id), 
+	FOREIGN KEY(application_id) REFERENCES loan_applications (id) ON DELETE CASCADE, 
+	FOREIGN KEY(changed_by) REFERENCES users (id) ON DELETE SET NULL
 );
 
--- 17. Enable Supabase Realtime
+-- 4. Enable Supabase Realtime
 DO $$ BEGIN
     ALTER PUBLICATION supabase_realtime ADD TABLE leads;
     ALTER PUBLICATION supabase_realtime ADD TABLE call_logs;
     ALTER PUBLICATION supabase_realtime ADD TABLE follow_ups;
     ALTER PUBLICATION supabase_realtime ADD TABLE loan_applications;
 EXCEPTION WHEN OTHERS THEN NULL; END $$;
+
+-- 5. Insert Default Administrator (Password: Password123!)
+INSERT INTO users (id, email, password_hash, full_name, role, is_active)
+VALUES (
+    'a0000000-0000-0000-0000-000000000001',
+    'admin@loanflow.demo',
+    '$2b$12$YqU8YF9ZqX9U9fE2F/Zqee3Z4HnBqQe5j6G4b7N6P3Q5T8v9M0W.2',
+    'Vikramaditya Singhania',
+    'ADMIN',
+    true
+) ON CONFLICT (email) DO NOTHING;
