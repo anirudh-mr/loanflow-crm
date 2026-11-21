@@ -3,7 +3,7 @@ import React, { useRef, useState } from 'react'
 interface Card3DProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
   className?: string
-  accentColor?: 'slate' | 'mist' | 'navy' | 'emerald' | 'amber' | 'blue'
+  variant?: 'light' | 'dark' | 'obsidian'
   maxTilt?: number
   enableGlare?: boolean
 }
@@ -11,7 +11,7 @@ interface Card3DProps extends React.HTMLAttributes<HTMLDivElement> {
 export const Card3D: React.FC<Card3DProps> = ({
   children,
   className = '',
-  accentColor = 'slate',
+  variant = 'obsidian',
   maxTilt = 4,
   enableGlare = true,
   ...props
@@ -42,7 +42,7 @@ export const Card3D: React.FC<Card3DProps> = ({
       setGlarePosition({
         x: (x / rect.width) * 100,
         y: (y / rect.height) * 100,
-        opacity: 0.12,
+        opacity: variant === 'light' ? 0.12 : 0.08,
       })
     }
   }
@@ -55,21 +55,26 @@ export const Card3D: React.FC<Card3DProps> = ({
     setGlarePosition((prev) => ({ ...prev, opacity: 0 }))
   }
 
+  const baseStyle =
+    variant === 'light'
+      ? 'bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_-6px_rgba(15,23,42,0.08)] hover:border-slate-300 text-slate-900'
+      : 'bg-[#0b1120]/95 backdrop-blur-2xl border border-slate-700/80 shadow-[0_25px_60px_-15px_rgba(11,17,32,0.45)] hover:border-slate-600 text-white'
+
   return (
     <div
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={style}
-      className={`relative overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-[0_2px_12px_-2px_rgba(15,23,42,0.04)] hover:shadow-[0_12px_28px_-6px_rgba(15,23,42,0.08)] hover:border-slate-300 transition-all duration-300 text-slate-900 ${className}`}
+      className={`relative overflow-hidden rounded-3xl transition-all duration-300 ${baseStyle} ${className}`}
       {...props}
     >
-      {/* Specular Soft Daylight Sheen */}
+      {/* Specular Glare Sheen */}
       {enableGlare && (
         <div
           className="pointer-events-none absolute -inset-px transition-opacity duration-300 will-change-[opacity]"
           style={{
-            background: `radial-gradient(circle 240px at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, ${glarePosition.opacity}), transparent 80%)`,
+            background: `radial-gradient(circle 280px at ${glarePosition.x}% ${glarePosition.y}%, rgba(255, 255, 255, ${glarePosition.opacity}), transparent 80%)`,
           }}
         />
       )}

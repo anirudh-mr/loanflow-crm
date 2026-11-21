@@ -3,6 +3,7 @@ import * as THREE from 'three'
 
 interface AmbientUniverse3DProps {
   className?: string
+  theme?: 'light' | 'dark'
   interactive?: boolean
   particleCount?: number
   speedMultiplier?: number
@@ -226,6 +227,7 @@ function createGoldIngotTexture(): THREE.CanvasTexture {
 
 export const AmbientUniverse3D: React.FC<AmbientUniverse3DProps> = ({
   className = '',
+  theme = 'dark',
   interactive = true,
   particleCount = 200,
   speedMultiplier = 0.7,
@@ -253,13 +255,16 @@ export const AmbientUniverse3D: React.FC<AmbientUniverse3DProps> = ({
 
     renderer.setSize(width, height)
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    renderer.setClearColor(0xf8fafc, 1) // Crisp mist-blue / alabaster
+    
+    const isDark = theme === 'dark'
+    const bgColor = isDark ? 0x090e1a : 0xf8fafc
+    renderer.setClearColor(bgColor, 1)
     renderer.shadowMap.enabled = true
     renderer.shadowMap.type = THREE.PCFSoftShadowMap
     container.appendChild(renderer.domElement)
 
     const scene = new THREE.Scene()
-    scene.fog = new THREE.FogExp2(0xf8fafc, 0.0022)
+    scene.fog = new THREE.FogExp2(bgColor, 0.0022)
 
     const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000)
     camera.position.set(0, 0, 165)
@@ -267,18 +272,18 @@ export const AmbientUniverse3D: React.FC<AmbientUniverse3DProps> = ({
     // -------------------------------------------------------------
     // Studio Banking Lighting (Key sunlight, soft mist-blue fill, gold rim)
     // -------------------------------------------------------------
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.9)
+    const ambientLight = new THREE.AmbientLight(0xffffff, isDark ? 0.6 : 0.9)
     scene.add(ambientLight)
 
-    const keySunlight = new THREE.DirectionalLight(0xfffdfa, 1.25)
+    const keySunlight = new THREE.DirectionalLight(0xfffdfa, isDark ? 1.4 : 1.25)
     keySunlight.position.set(70, 90, 80)
     scene.add(keySunlight)
 
-    const fillMistLight = new THREE.DirectionalLight(0xdbeafe, 0.7)
+    const fillMistLight = new THREE.DirectionalLight(isDark ? 0x60a5fa : 0xdbeafe, isDark ? 0.5 : 0.7)
     fillMistLight.position.set(-80, -50, -40)
     scene.add(fillMistLight)
 
-    const goldRimLight = new THREE.PointLight(0xf59e0b, 1.0, 200)
+    const goldRimLight = new THREE.PointLight(0xf59e0b, isDark ? 1.3 : 1.0, 250)
     goldRimLight.position.set(60, -40, 50)
     scene.add(goldRimLight)
 
@@ -492,9 +497,9 @@ export const AmbientUniverse3D: React.FC<AmbientUniverse3DProps> = ({
 
     // Connect nodes with smooth banking currency flow lines
     const lineMat = new THREE.LineBasicMaterial({
-      color: 0x94a3b8,
+      color: isDark ? 0x334155 : 0x94a3b8,
       transparent: true,
-      opacity: 0.45,
+      opacity: isDark ? 0.35 : 0.45,
     })
 
     for (let i = 0; i < bankNodes.length; i++) {
@@ -521,10 +526,10 @@ export const AmbientUniverse3D: React.FC<AmbientUniverse3DProps> = ({
 
     particleGeo.setAttribute('position', new THREE.BufferAttribute(posArray, 3))
     const particleMat = new THREE.PointsMaterial({
-      size: 2.2,
-      color: 0x64748b, // Slate mist
+      size: isDark ? 2.6 : 2.2,
+      color: isDark ? 0xd4af37 : 0x64748b, // Gold dust in dark theme, slate in light
       transparent: true,
-      opacity: 0.4,
+      opacity: isDark ? 0.5 : 0.4,
     })
     const dustPoints = new THREE.Points(particleGeo, particleMat)
     scene.add(dustPoints)
@@ -630,7 +635,7 @@ export const AmbientUniverse3D: React.FC<AmbientUniverse3DProps> = ({
       hubGeo.dispose()
       renderer.dispose()
     }
-  }, [interactive, particleCount, speedMultiplier])
+  }, [interactive, particleCount, speedMultiplier, theme])
 
   return (
     <div

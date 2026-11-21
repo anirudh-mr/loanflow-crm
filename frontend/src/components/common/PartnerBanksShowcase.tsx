@@ -98,30 +98,47 @@ export const INSTITUTIONAL_BANKS: InstitutionalBank[] = [
 
 interface PartnerBanksShowcaseProps {
   variant?: 'grid' | 'ticker' | 'compact-dock'
+  theme?: 'light' | 'dark'
   className?: string
   onSelectBank?: (bank: InstitutionalBank) => void
 }
 
 export const PartnerBanksShowcase: React.FC<PartnerBanksShowcaseProps> = ({
   variant = 'compact-dock',
+  theme = 'dark',
   className = '',
   onSelectBank,
 }) => {
   const [activeBank, setActiveBank] = useState<InstitutionalBank>(INSTITUTIONAL_BANKS[0])
+  const isDark = theme === 'dark'
 
   if (variant === 'ticker') {
     return (
-      <div className={`w-full overflow-hidden py-3 border-y border-slate-200/80 bg-white/70 backdrop-blur-md ${className}`}>
+      <div
+        className={`w-full overflow-hidden py-3 border-y ${
+          isDark
+            ? 'border-slate-800/80 bg-slate-950/60 backdrop-blur-md'
+            : 'border-slate-200/80 bg-white/70 backdrop-blur-md'
+        } ${className}`}
+      >
         <div className="flex items-center gap-8 animate-marquee whitespace-nowrap">
           {INSTITUTIONAL_BANKS.concat(INSTITUTIONAL_BANKS).map((bank, idx) => (
             <div
               key={`${bank.id}-${idx}`}
-              className="inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50/90 border border-slate-200/70 hover:border-slate-300 transition-colors shadow-2xs"
+              className={`inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl border transition-colors shadow-2xs ${
+                isDark
+                  ? 'bg-slate-900/90 border-slate-800 hover:border-slate-700 text-slate-200'
+                  : 'bg-slate-50/90 border-slate-200/70 hover:border-slate-300 text-slate-800'
+              }`}
             >
               <BankLogo bank={bank.id} variant="icon" size="sm" />
               <div className="text-left">
-                <span className="text-xs font-bold text-slate-800">{bank.name}</span>
-                <span className="block text-[9px] font-mono text-emerald-700">ROI {bank.roi} • {bank.sla}</span>
+                <span className={`text-xs font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                  {bank.name}
+                </span>
+                <span className={`block text-[9px] font-mono ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+                  ROI {bank.roi} • {bank.sla}
+                </span>
               </div>
             </div>
           ))}
@@ -135,12 +152,22 @@ export const PartnerBanksShowcase: React.FC<PartnerBanksShowcaseProps> = ({
       <div className={`space-y-4 ${className}`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Landmark className="h-4 w-4 text-slate-700" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 font-mono">
+            <Landmark className={`h-4 w-4 ${isDark ? 'text-slate-300' : 'text-slate-700'}`} />
+            <h3
+              className={`text-xs font-bold uppercase tracking-wider font-mono ${
+                isDark ? 'text-slate-300' : 'text-slate-700'
+              }`}
+            >
               Institutional Underwriting Partners (8 Banks)
             </h3>
           </div>
-          <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 flex items-center gap-1">
+          <span
+            className={`text-[10px] font-mono px-2 py-0.5 rounded border flex items-center gap-1 ${
+              isDark
+                ? 'text-emerald-400 bg-emerald-950/50 border-emerald-800'
+                : 'text-emerald-700 bg-emerald-50 border-emerald-200'
+            }`}
+          >
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
             Direct ISO-20022 Core Integration
           </span>
@@ -154,23 +181,43 @@ export const PartnerBanksShowcase: React.FC<PartnerBanksShowcaseProps> = ({
                 setActiveBank(b)
                 onSelectBank?.(b)
               }}
-              className="group cursor-pointer p-3 rounded-xl bg-white border border-slate-200/90 hover:border-slate-400 hover:shadow-xs transition-all duration-200 text-left"
+              className={`group cursor-pointer p-3 rounded-xl border transition-all duration-200 text-left ${
+                isDark
+                  ? 'bg-slate-900 border-slate-800 hover:border-slate-600'
+                  : 'bg-white border-slate-200/90 hover:border-slate-400 hover:shadow-xs'
+              }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <BankLogo bank={b.id} variant="icon" size="md" />
-                <span className="text-[9px] font-mono font-semibold text-slate-400 group-hover:text-slate-700 transition-colors">
+                <span
+                  className={`text-[9px] font-mono font-semibold ${
+                    isDark ? 'text-slate-400 group-hover:text-slate-200' : 'text-slate-400 group-hover:text-slate-700'
+                  }`}
+                >
                   {b.code}
                 </span>
               </div>
-              <div className="font-bold text-xs text-slate-900 group-hover:text-slate-800 transition-colors truncate">
+              <div
+                className={`font-bold text-xs truncate ${
+                  isDark ? 'text-white' : 'text-slate-900'
+                }`}
+              >
                 {b.name}
               </div>
-              <div className="text-[10px] text-slate-500 mt-0.5 truncate">
+              <div
+                className={`text-[10px] mt-0.5 truncate ${
+                  isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
                 Starting {b.roi}
               </div>
-              <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-slate-400">
+              <div
+                className={`mt-2 pt-2 border-t flex items-center justify-between text-[9px] font-mono ${
+                  isDark ? 'border-slate-800 text-slate-500' : 'border-slate-100 text-slate-400'
+                }`}
+              >
                 <span>SLA: {b.sla}</span>
-                <span className="text-emerald-700 font-medium">Active</span>
+                <span className={isDark ? 'text-emerald-400' : 'text-emerald-700'}>Active</span>
               </div>
             </div>
           ))}
@@ -181,25 +228,49 @@ export const PartnerBanksShowcase: React.FC<PartnerBanksShowcaseProps> = ({
 
   // Compact Dock (optimized for Left Column hero of Login page)
   return (
-    <div className={`space-y-3.5 bg-white/90 backdrop-blur-xl rounded-2xl border border-slate-200/90 p-4 shadow-xs ${className}`}>
-      <div className="flex items-center justify-between pb-2 border-b border-slate-100">
-        <div className="flex items-center gap-2">
-          <div className="p-1.5 rounded-lg bg-slate-900 text-white">
-            <Landmark className="h-3.5 w-3.5" />
+    <div
+      className={`space-y-4 rounded-3xl p-5 border shadow-xl ${
+        isDark
+          ? 'bg-slate-900/85 backdrop-blur-2xl border-slate-700/80 text-white'
+          : 'bg-white/90 backdrop-blur-xl border-slate-200/90 text-slate-800 shadow-xs'
+      } ${className}`}
+    >
+      <div
+        className={`flex items-center justify-between pb-3 border-b ${
+          isDark ? 'border-slate-800' : 'border-slate-100'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className={`p-2 rounded-xl ${
+              isDark ? 'bg-slate-800 text-amber-400 border border-slate-700' : 'bg-slate-900 text-white'
+            }`}
+          >
+            <Landmark className="h-4 w-4" />
           </div>
           <div>
-            <div className="text-xs font-bold text-slate-900 tracking-tight">Institutional Bank Partners</div>
-            <div className="text-[10px] text-slate-500 font-mono">Direct Loan Routing & Credit Underwriting</div>
+            <div className={`text-sm font-bold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Institutional Bank Partners
+            </div>
+            <div className={`text-[11px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              Direct Loan Routing & Underwriting APIs
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-mono text-emerald-800">
+        <div
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono ${
+            isDark
+              ? 'bg-emerald-950/60 border border-emerald-800 text-emerald-300'
+              : 'bg-emerald-50 border border-emerald-200 text-emerald-800'
+          }`}
+        >
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span>8 Core APIs</span>
+          <span>8 Active Integrations</span>
         </div>
       </div>
 
       {/* Quick Select Bank Logo Grid */}
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-2.5">
         {INSTITUTIONAL_BANKS.map((b) => {
           const isSelected = activeBank.id === b.id
           return (
@@ -210,17 +281,29 @@ export const PartnerBanksShowcase: React.FC<PartnerBanksShowcaseProps> = ({
                 setActiveBank(b)
                 onSelectBank?.(b)
               }}
-              className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all text-center group ${
+              className={`p-2.5 rounded-2xl border flex flex-col items-center justify-center gap-1.5 transition-all text-center group ${
                 isSelected
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                  ? isDark
+                    ? 'bg-slate-800 text-white border-amber-400/80 shadow-md ring-1 ring-amber-400/30'
+                    : 'bg-slate-900 text-white border-slate-900 shadow-xs'
+                  : isDark
+                  ? 'bg-slate-950/60 hover:bg-slate-800/80 border-slate-800 text-slate-300'
                   : 'bg-slate-50/80 hover:bg-slate-100/90 border-slate-200 text-slate-700'
               }`}
             >
               <BankLogo bank={b.id} variant="icon" size="sm" />
-              <span className={`text-[10px] font-bold tracking-tight truncate w-full ${isSelected ? 'text-white' : 'text-slate-800'}`}>
+              <span
+                className={`text-[11px] font-bold tracking-tight truncate w-full ${
+                  isSelected ? 'text-white' : isDark ? 'text-slate-200' : 'text-slate-800'
+                }`}
+              >
                 {b.name.replace(' Bank', '')}
               </span>
-              <span className={`text-[8px] font-mono ${isSelected ? 'text-slate-300' : 'text-slate-500'}`}>
+              <span
+                className={`text-[9px] font-mono ${
+                  isSelected ? (isDark ? 'text-amber-300' : 'text-slate-300') : isDark ? 'text-slate-400' : 'text-slate-500'
+                }`}
+              >
                 {b.roi.split(' ')[0]}
               </span>
             </button>
@@ -229,21 +312,29 @@ export const PartnerBanksShowcase: React.FC<PartnerBanksShowcaseProps> = ({
       </div>
 
       {/* Selected Bank Live Telemetry Snippet */}
-      <div className="rounded-xl bg-slate-50 border border-slate-200/80 p-2.5 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2">
+      <div
+        className={`rounded-2xl p-3 flex items-center justify-between text-xs border ${
+          isDark
+            ? 'bg-slate-950/80 border-slate-800 text-slate-200'
+            : 'bg-slate-50 border-slate-200/80 text-slate-800'
+        }`}
+      >
+        <div className="flex items-center gap-2.5">
           <BankLogo bank={activeBank.id} variant="icon" size="sm" />
           <div>
-            <div className="font-bold text-slate-900 text-[11px] leading-tight">
+            <div className={`font-bold text-[12px] leading-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
               {activeBank.name} Schemes
             </div>
-            <div className="text-[10px] text-slate-500 font-mono">
+            <div className={`text-[10px] font-mono ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               {activeBank.features[0]} • Up to {activeBank.maxTenure}
             </div>
           </div>
         </div>
         <div className="text-right font-mono">
-          <div className="text-[11px] font-bold text-emerald-700">{activeBank.sla} SLA</div>
-          <div className="text-[9px] text-slate-400">Direct Sanction</div>
+          <div className={`text-[12px] font-bold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>
+            {activeBank.sla} SLA
+          </div>
+          <div className={`text-[9px] ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Direct Sanction</div>
         </div>
       </div>
     </div>

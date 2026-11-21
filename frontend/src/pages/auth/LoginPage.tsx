@@ -15,11 +15,13 @@ import {
   Eye,
   EyeOff,
   CheckCircle2,
+  Building2,
+  Clock,
+  Layers,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { AmbientBackground } from '@/components/common/AmbientBackground'
 import { Card3D } from '@/components/common/Card3D'
-import { FintechOrbital3D } from '@/components/common/FintechOrbital3D'
 import { PartnerBanksShowcase } from '@/components/common/PartnerBanksShowcase'
 
 interface DemoPersona {
@@ -30,6 +32,7 @@ interface DemoPersona {
   badge: string
   icon: React.ReactNode
   isMobile?: boolean
+  description: string
 }
 
 const DEMO_PERSONAS: DemoPersona[] = [
@@ -38,17 +41,19 @@ const DEMO_PERSONAS: DemoPersona[] = [
     label: 'Admin Portal',
     role: 'admin',
     email: 'admin@loanflow.demo',
-    badge: 'Executive',
-    icon: <ShieldCheck className="h-4 w-4" />,
+    badge: 'Executive Overseer',
+    icon: <ShieldCheck className="h-5 w-5" />,
+    description: 'Full system oversight, bank schemes, live analytics & targets',
   },
   {
     id: 'mobile-admin',
     label: 'Mobile Admin',
     role: 'admin',
     email: 'admin@loanflow.demo',
-    badge: 'Mobile App',
-    icon: <Smartphone className="h-4 w-4" />,
+    badge: 'Executive App',
+    icon: <Smartphone className="h-5 w-5" />,
     isMobile: true,
+    description: 'On-the-go supervisor cockpit for tablet and smartphone',
   },
   {
     id: 'staff-1',
@@ -56,7 +61,8 @@ const DEMO_PERSONAS: DemoPersona[] = [
     role: 'staff',
     email: 'staff1@loanflow.demo',
     badge: '100 Calls/Day',
-    icon: <PhoneCall className="h-4 w-4" />,
+    icon: <PhoneCall className="h-5 w-5" />,
+    description: 'High-volume outbound calling, lead qualification & followups',
   },
   {
     id: 'staff-2',
@@ -64,7 +70,8 @@ const DEMO_PERSONAS: DemoPersona[] = [
     role: 'staff',
     email: 'staff2@loanflow.demo',
     badge: 'Top Performer',
-    icon: <TrendingUp className="h-4 w-4" />,
+    icon: <TrendingUp className="h-5 w-5" />,
+    description: 'Document verification, KYC checks & direct loan underwriting',
   },
 ]
 
@@ -89,11 +96,11 @@ export const LoginPage: React.FC = () => {
 
     tl.fromTo(
       heroRef.current,
-      { opacity: 0, x: -25 },
+      { opacity: 0, x: -30 },
       { opacity: 1, x: 0, duration: 0.8 }
     ).fromTo(
       cardRef.current,
-      { opacity: 0, x: 25, scale: 0.98 },
+      { opacity: 0, x: 30, scale: 0.98 },
       { opacity: 1, x: 0, scale: 1, duration: 0.8 },
       '-=0.5'
     )
@@ -143,117 +150,118 @@ export const LoginPage: React.FC = () => {
   }
 
   return (
-    <div className="relative min-h-screen bg-[#f8fafc] text-slate-800 flex flex-col justify-between py-8 px-4 sm:px-6 lg:px-12 font-sans overflow-x-hidden">
+    <div className="relative min-h-screen bg-[#090e1a] text-slate-100 flex flex-col justify-between py-6 px-4 sm:px-6 lg:px-12 font-sans overflow-x-hidden selection:bg-amber-500/30 selection:text-white">
       {/* 3D Banking Ambient Canvas Background (Realistic Cards, Bullion, Vault Gear) */}
-      <AmbientBackground showGrid={true} />
+      <AmbientBackground theme="dark" showGrid={true} />
 
       {/* Top Institutional Trust Bar */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-6 border-b border-slate-200/80 text-xs">
+      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-5 border-b border-slate-800/80 text-xs">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-xl bg-slate-900 text-white flex items-center justify-center shadow-xs">
-            <Landmark className="h-4 w-4" />
+          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 text-amber-400 flex items-center justify-center shadow-md">
+            <Landmark className="h-5 w-5" />
           </div>
           <div className="leading-tight">
-            <span className="font-extrabold tracking-tight text-slate-900 text-sm">LoanFlow CRM</span>
-            <span className="hidden sm:inline-block ml-2 text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 border border-slate-200 text-slate-600">
+            <span className="font-extrabold tracking-tight text-white text-base">LoanFlow CRM</span>
+            <span className="hidden sm:inline-block ml-2.5 text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300">
               ISO-20022 Intermediary Gateway
             </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 text-[11px] font-mono text-slate-500">
+        <div className="flex items-center gap-5 text-[11px] font-mono text-slate-400">
           <span className="hidden md:flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-slate-700" />
+            <ShieldCheck className="h-3.5 w-3.5 text-slate-300" />
             256-Bit Bank Encryption
           </span>
           <span className="hidden lg:flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
             SOC-2 Type II Certified
           </span>
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 font-semibold">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/90 text-emerald-300 font-semibold shadow-xs">
+            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
             8 Bank APIs Live
           </span>
         </div>
       </header>
 
       {/* Main Dual-Column Hero & Login Experience */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto my-auto py-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-        {/* Left Column: Visual Brand, 3D Core, and Partner Bank Showcase */}
-        <div ref={heroRef} className="lg:col-span-7 space-y-5 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-xs font-mono font-medium shadow-2xs">
-            <Landmark className="h-3.5 w-3.5 text-slate-700" />
+      <main className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+        {/* Left Column: Visual Brand, Telemetry Cards, and Partner Bank Showcase */}
+        <div ref={heroRef} className="lg:col-span-6 space-y-6 text-center lg:text-left">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-slate-300 text-xs font-mono font-medium shadow-xs">
+            <Landmark className="h-3.5 w-3.5 text-amber-400" />
             <span>ENTERPRISE LOAN SALES CRM • INSTITUTIONAL PORTAL</span>
           </div>
 
-          <div className="space-y-2">
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight text-slate-900 leading-tight">
-              Enterprise Lending CRM & <br className="hidden sm:inline" />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 via-slate-700 to-slate-900">
+          <div className="space-y-3">
+            <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black tracking-tight text-white leading-[1.15]">
+              Enterprise Lending CRM & <br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-amber-200">
                 Direct Bank Intermediary
               </span>
             </h1>
-            <p className="text-sm sm:text-base text-slate-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl mx-auto lg:mx-0">
               Connecting 20-agent outbound tele-calling desks directly with tier-1 partner banks.
               Instant customer credit underwriting, automated KYC docket generation, and real-time loan sanction routing.
             </p>
           </div>
 
-          {/* Interactive 3D Banking Core & Real-Time Underwriting Telemetry */}
-          <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-6 py-2">
-            <div className="shrink-0">
-              <FintechOrbital3D
-                size={220}
-                stats={{
-                  approvedRate: 88.4,
-                  activeLeads: 1250,
-                  processingSpeed: '0.4s',
-                }}
-              />
+          {/* Underwriting Telemetry Grid (Clean, Balanced & Modern) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
+            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Sanction Volume</div>
+              <div className="text-xl font-black text-white font-mono mt-0.5">₹128.4 Cr</div>
+              <div className="text-[10px] text-emerald-400 font-medium mt-0.5">↑ 18.2% this quarter</div>
             </div>
 
-            {/* Quick Metrics Ticker */}
-            <div className="w-full sm:w-auto flex-1 grid grid-cols-2 gap-2.5 text-left">
-              <div className="p-3 rounded-xl bg-white/95 border border-slate-200/90 shadow-2xs">
-                <div className="text-[10px] font-mono uppercase text-slate-400">Total Sanction Volume</div>
-                <div className="text-lg font-black text-slate-900 font-mono">₹128.4 Cr</div>
-                <div className="text-[10px] text-emerald-700 font-medium">↑ 18.2% this quarter</div>
-              </div>
-              <div className="p-3 rounded-xl bg-white/95 border border-slate-200/90 shadow-2xs">
-                <div className="text-[10px] font-mono uppercase text-slate-400">Daily Tele-Calling Goal</div>
-                <div className="text-lg font-black text-slate-900 font-mono">100 Calls/Rep</div>
-                <div className="text-[10px] text-slate-500">Auto-logged CRM target</div>
-              </div>
-              <div className="p-3 rounded-xl bg-white/95 border border-slate-200/90 shadow-2xs">
-                <div className="text-[10px] font-mono uppercase text-slate-400">Underwriting Speed</div>
-                <div className="text-lg font-black text-slate-900 font-mono">&lt; 0.4s Route</div>
-                <div className="text-[10px] text-emerald-700 font-medium">Direct bank REST APIs</div>
-              </div>
-              <div className="p-3 rounded-xl bg-white/95 border border-slate-200/90 shadow-2xs">
-                <div className="text-[10px] font-mono uppercase text-slate-400">CIBIL Threshold</div>
-                <div className="text-lg font-black text-slate-900 font-mono">680+ Score</div>
-                <div className="text-[10px] text-slate-500">Multi-bank scheme engine</div>
-              </div>
+            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Daily Agent Target</div>
+              <div className="text-xl font-black text-white font-mono mt-0.5">100 Calls</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Per-rep quota tracker</div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Underwriting</div>
+              <div className="text-xl font-black text-amber-300 font-mono mt-0.5">&lt; 0.4s Route</div>
+              <div className="text-[10px] text-emerald-400 font-medium mt-0.5">Direct ISO-20022</div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Approval Rate</div>
+              <div className="text-xl font-black text-emerald-400 font-mono mt-0.5">88.4%</div>
+              <div className="text-[10px] text-slate-400 mt-0.5">Across 8 Banks</div>
             </div>
           </div>
 
           {/* Connected Partner Banking Grid Showcase */}
-          <PartnerBanksShowcase variant="compact-dock" />
+          <PartnerBanksShowcase variant="compact-dock" theme="dark" />
         </div>
 
-        {/* Right Column: Clean Banking Auth Vault Card */}
-        <div ref={cardRef} className="lg:col-span-5 w-full max-w-md mx-auto">
-          <Card3D className="p-6 sm:p-8 space-y-6">
-            {/* Persona Quick Dock */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
-                <span>1-Click Role Simulator</span>
-                <span className="text-slate-700 flex items-center gap-1 font-mono text-[10px]">
-                  <Zap className="h-3 w-3" /> Auto-Fill Ready
-                </span>
+        {/* Right Column: Expanded High-End Dark Banking Auth Vault Card */}
+        <div ref={cardRef} className="lg:col-span-6 w-full max-w-xl mx-auto">
+          <Card3D variant="obsidian" className="p-8 sm:p-10 space-y-7">
+            {/* Header Title inside Vault */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div>
+                <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
+                  Institutional Access Portal
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5 font-mono">
+                  Select a pre-configured role or enter credentials
+                </p>
+              </div>
+              <span className="flex items-center gap-1.5 text-[11px] font-mono text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
+                <Zap className="h-3 w-3" /> 1-Click Ready
+              </span>
+            </div>
+
+            {/* Persona Quick Dock - Generous, Comfortable Sizing */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
+                Simulation Roles
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {DEMO_PERSONAS.map((p) => {
                   const isSelected = selectedPersona === p.id
                   return (
@@ -261,27 +269,36 @@ export const LoginPage: React.FC = () => {
                       key={p.id}
                       type="button"
                       onClick={() => handleSelectPersona(p)}
-                      className={`flex items-center gap-2 p-2.5 rounded-xl border text-left transition-all duration-150 text-xs ${
+                      className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all duration-200 ${
                         isSelected
-                          ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
-                          : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                          ? 'bg-slate-800 text-white border-amber-400/90 shadow-lg ring-1 ring-amber-400/30'
+                          : 'bg-slate-950/60 hover:bg-slate-850 border-slate-800 text-slate-300 hover:border-slate-700'
                       }`}
                     >
                       <div
-                        className={`p-1.5 rounded-lg shrink-0 ${
-                          isSelected ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 shadow-2xs'
+                        className={`p-2 rounded-xl shrink-0 mt-0.5 ${
+                          isSelected
+                            ? 'bg-amber-400 text-slate-950 shadow-sm'
+                            : 'bg-slate-800 text-slate-400 border border-slate-700'
                         }`}
                       >
                         {p.icon}
                       </div>
-                      <div className="truncate">
-                        <div className="font-semibold truncate">{p.label}</div>
-                        <div
-                          className={`text-[10px] font-mono truncate ${
-                            isSelected ? 'text-slate-300' : 'text-slate-500'
-                          }`}
-                        >
-                          {p.badge}
+                      <div className="truncate flex-1">
+                        <div className="flex items-center justify-between">
+                          <span className="font-bold text-sm text-white truncate">{p.label}</span>
+                          <span
+                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
+                              isSelected
+                                ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
+                                : 'bg-slate-800 text-slate-400'
+                            }`}
+                          >
+                            {p.badge}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-400 mt-1 line-clamp-1 leading-tight">
+                          {p.description}
                         </div>
                       </div>
                     </button>
@@ -292,8 +309,8 @@ export const LoginPage: React.FC = () => {
 
             {/* Error Message Banner */}
             {error && (
-              <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center gap-2">
-                <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+              <div className="p-3.5 bg-rose-950/60 border border-rose-800 rounded-2xl text-xs text-rose-200 flex items-center gap-2.5">
+                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
                 <span>{error}</span>
               </div>
             )}
@@ -301,43 +318,43 @@ export const LoginPage: React.FC = () => {
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5 font-mono">
-                  Work Email
+                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 font-mono">
+                  Corporate Email ID
                 </label>
                 <div className="relative">
-                  <Mail className="h-4 w-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+                  <Mail className="h-4 w-4 absolute left-4 top-3.5 text-slate-400 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@loanflow.demo"
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-3 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all font-mono"
+                    className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider font-mono">
-                    Password
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+                    Session Password
                   </label>
-                  <span className="text-[10px] text-slate-500 font-mono">Default: Password123!</span>
+                  <span className="text-[11px] text-amber-300/80 font-mono">Default: Password123!</span>
                 </div>
                 <div className="relative">
-                  <Lock className="h-4 w-4 absolute left-3.5 top-3 text-slate-400 pointer-events-none" />
+                  <Lock className="h-4 w-4 absolute left-4 top-3.5 text-slate-400 pointer-events-none" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-slate-900 focus:bg-white transition-all font-mono"
+                    className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-11 pr-11 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all font-mono"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 focus:outline-none"
+                    className="absolute right-3.5 top-3 text-slate-400 hover:text-white p-1 focus:outline-none transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -348,11 +365,11 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:scale-[0.99] shadow-xs flex items-center justify-center gap-2 transition-all duration-150 disabled:opacity-50"
+                className="w-full py-3.5 px-6 rounded-xl text-sm font-extrabold text-slate-950 bg-gradient-to-r from-white via-slate-100 to-slate-200 hover:from-slate-100 hover:to-white active:scale-[0.99] shadow-lg flex items-center justify-center gap-2 transition-all duration-150 disabled:opacity-50 mt-2"
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2">
-                    <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-4 w-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
                     <span>Authorizing Session...</span>
                   </div>
                 ) : (
@@ -372,20 +389,20 @@ export const LoginPage: React.FC = () => {
             </form>
 
             {/* Footer Telemetry Badge */}
-            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-              <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-ping" />
-                Supabase PostgreSQL 15+
+            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
+                <span className="text-slate-300">Supabase PostgreSQL 15+</span>
               </span>
-              <span className="font-mono text-slate-400">JWT • RBAC • Render</span>
+              <span className="font-mono text-slate-500">JWT • RBAC • Render API</span>
             </div>
           </Card3D>
         </div>
       </main>
 
       {/* Bottom Full-Width Partner Banks Marquee Ticker */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto pt-4 border-t border-slate-200/80">
-        <PartnerBanksShowcase variant="ticker" />
+      <footer className="relative z-10 w-full max-w-7xl mx-auto pt-4 border-t border-slate-800/80">
+        <PartnerBanksShowcase variant="ticker" theme="dark" />
       </footer>
     </div>
   )
