@@ -58,10 +58,29 @@ app.mount("/uploads", StaticFiles(directory=str(upload_path)), name="uploads")
 
 
 # ---------------------------------------------------------------------------
-# Health check
+# Root and Health check endpoints
 # ---------------------------------------------------------------------------
 
+@app.get("/", tags=["Root"])
+async def root():
+    """Root endpoint welcoming visitors and providing documentation links."""
+    return {
+        "app": "LoanFlow CRM API",
+        "status": "online",
+        "version": "1.0.0",
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "health": "/api/v1/health",
+        "database": "Supabase PostgreSQL connected"
+    }
+
+
 @app.get("/health", tags=["Health"])
+@app.get("/api/v1/health", tags=["Health"])
 async def health_check():
-    """Simple health-check endpoint."""
-    return {"status": "healthy", "service": "LoanFlow API"}
+    """Simple health-check endpoint available at /health and /api/v1/health."""
+    return {
+        "status": "healthy",
+        "service": "LoanFlow API",
+        "version": "1.0.0"
+    }
