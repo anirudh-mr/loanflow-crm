@@ -1,119 +1,55 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { gsap } from 'gsap'
 import {
   Lock,
   Mail,
-  ArrowRight,
-  ShieldCheck,
-  PhoneCall,
-  AlertCircle,
-  TrendingUp,
-  Smartphone,
-  Zap,
-  Landmark,
   Eye,
   EyeOff,
-  CheckCircle2,
-  Building2,
-  Clock,
-  Layers,
+  AlertCircle,
+  X,
+  Shield,
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
-import { AmbientBackground } from '@/components/common/AmbientBackground'
-import { Card3D } from '@/components/common/Card3D'
-import { PartnerBanksShowcase } from '@/components/common/PartnerBanksShowcase'
+import { RoleTabs, ROLES, RoleConfig } from '@/components/auth/RoleTabs'
+import { StaticGradientMesh } from '@/components/auth/StaticGradientMesh'
+import { BankLogo } from '@/components/common/BankLogo'
 
-interface DemoPersona {
-  id: string
-  label: string
-  role: 'admin' | 'staff'
-  email: string
-  badge: string
-  icon: React.ReactNode
-  isMobile?: boolean
-  description: string
-}
+// Lazy-load R3F 3D background to prevent blocking initial form render
+const Background3D = React.lazy(() => import('@/components/auth/Background3D'))
 
-const DEMO_PERSONAS: DemoPersona[] = [
-  {
-    id: 'admin',
-    label: 'Admin Portal',
-    role: 'admin',
-    email: 'admin@loanflow.demo',
-    badge: 'Executive Overseer',
-    icon: <ShieldCheck className="h-5 w-5" />,
-    description: 'Full system oversight, bank schemes, live analytics & targets',
-  },
-  {
-    id: 'mobile-admin',
-    label: 'Mobile Admin',
-    role: 'admin',
-    email: 'admin@loanflow.demo',
-    badge: 'Executive App',
-    icon: <Smartphone className="h-5 w-5" />,
-    isMobile: true,
-    description: 'On-the-go supervisor cockpit for tablet and smartphone',
-  },
-  {
-    id: 'staff-1',
-    label: 'Staff Agent 1',
-    role: 'staff',
-    email: 'staff1@loanflow.demo',
-    badge: '100 Calls/Day',
-    icon: <PhoneCall className="h-5 w-5" />,
-    description: 'High-volume outbound calling, lead qualification & followups',
-  },
-  {
-    id: 'staff-2',
-    label: 'Staff Agent 2',
-    role: 'staff',
-    email: 'staff2@loanflow.demo',
-    badge: 'Top Performer',
-    icon: <TrendingUp className="h-5 w-5" />,
-    description: 'Document verification, KYC checks & direct loan underwriting',
-  },
-]
+const PARTNER_BANK_KEYS = ['hdfc', 'sbi', 'icici', 'axis', 'kotak', 'bob', 'pnb', 'idfc']
 
 export const LoginPage: React.FC = () => {
   const { login } = useAuth()
   const navigate = useNavigate()
+
+  // Form State
   const [email, setEmail] = useState('admin@loanflow.demo')
-  const [password, setPassword] = useState('Password123!')
-  const [showPassword, setShowPassword] = useState(false)
+  const [password, setPassword] = useState('')
   const [selectedPersona, setSelectedPersona] = useState<string>('admin')
+  const [rememberMe, setRememberMe] = useState(true)
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-  const cardRef = useRef<HTMLDivElement>(null)
-  const heroRef = useRef<HTMLDivElement>(null)
+  // Demo note visibility (visible by default, easily dismissible)
+  const isDemoEnv = (import.meta as any).env?.VITE_DEMO_MODE !== 'false'
+  const [showDemoNote, setShowDemoNote] = useState<boolean>(isDemoEnv)
 
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    if (prefersReducedMotion) return
-
-    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
-
-    tl.fromTo(
-      heroRef.current,
-      { opacity: 0, x: -30 },
-      { opacity: 1, x: 0, duration: 0.8 }
-    ).fromTo(
-      cardRef.current,
-      { opacity: 0, x: 30, scale: 0.98 },
-      { opacity: 1, x: 0, scale: 1, duration: 0.8 },
-      '-=0.5'
-    )
-
-    return () => {
-      tl.kill()
+  const handleRoleChange = (role: RoleConfig) => {
+    setSelectedPersona(role.id)
+    setEmail(role.email)
+    // Pre-fill demo password for frictionless evaluation when in demo mode
+    if (isDemoEnv) {
+      setPassword('Password123!')
     }
-  }, [])
+    setError(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
-      setError('Please provide both email and password.')
+      setError('Please provide both your corporate email and password.')
       return
     }
 
@@ -134,276 +70,210 @@ export const LoginPage: React.FC = () => {
     }
   }
 
-  const handleSelectPersona = (persona: DemoPersona) => {
-    setSelectedPersona(persona.id)
-    setEmail(persona.email)
-    setPassword('Password123!')
-    setError(null)
-
-    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches && cardRef.current) {
-      gsap.fromTo(
-        cardRef.current,
-        { scale: 0.995 },
-        { scale: 1, duration: 0.25, ease: 'back.out(2)' }
-      )
-    }
-  }
-
   return (
-    <div className="relative min-h-screen bg-[#090e1a] text-slate-100 flex flex-col justify-between py-6 px-4 sm:px-6 lg:px-12 font-sans overflow-x-hidden selection:bg-amber-500/30 selection:text-white">
-      {/* 3D Banking Ambient Canvas Background (Realistic Cards, Bullion, Vault Gear) */}
-      <AmbientBackground theme="dark" showGrid={true} />
+    <div className="relative min-h-screen bg-[#060B1A] text-[#F8FAFC] flex flex-col items-center justify-center p-4 sm:p-6 font-sans antialiased overflow-x-hidden selection:bg-indigo-500/30 selection:text-white">
+      {/* 3D Subtle Background (Lazy-loaded with static gradient fallback) */}
+      <Suspense fallback={<StaticGradientMesh />}>
+        <Background3D />
+      </Suspense>
 
-      {/* Top Institutional Trust Bar */}
-      <header className="relative z-10 w-full max-w-7xl mx-auto flex items-center justify-between pb-5 border-b border-slate-800/80 text-xs">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 text-amber-400 flex items-center justify-center shadow-md">
-            <Landmark className="h-5 w-5" />
-          </div>
-          <div className="leading-tight">
-            <span className="font-extrabold tracking-tight text-white text-base">LoanFlow CRM</span>
-            <span className="hidden sm:inline-block ml-2.5 text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800/90 border border-slate-700 text-slate-300">
-              ISO-20022 Intermediary Gateway
-            </span>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-5 text-[11px] font-mono text-slate-400">
-          <span className="hidden md:flex items-center gap-1.5">
-            <ShieldCheck className="h-3.5 w-3.5 text-slate-300" />
-            256-Bit Bank Encryption
-          </span>
-          <span className="hidden lg:flex items-center gap-1.5">
-            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-            SOC-2 Type II Certified
-          </span>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/60 border border-emerald-800/90 text-emerald-300 font-semibold shadow-xs">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            8 Bank APIs Live
-          </span>
-        </div>
-      </header>
-
-      {/* Main Dual-Column Hero & Login Experience */}
-      <main className="relative z-10 w-full max-w-7xl mx-auto my-auto py-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
-        {/* Left Column: Visual Brand, Telemetry Cards, and Partner Bank Showcase */}
-        <div ref={heroRef} className="lg:col-span-6 space-y-6 text-center lg:text-left">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/80 text-slate-300 text-xs font-mono font-medium shadow-xs">
-            <Landmark className="h-3.5 w-3.5 text-amber-400" />
-            <span>ENTERPRISE LOAN SALES CRM • INSTITUTIONAL PORTAL</span>
-          </div>
-
-          <div className="space-y-3">
-            <h1 className="text-3xl sm:text-5xl lg:text-5xl font-black tracking-tight text-white leading-[1.15]">
-              Enterprise Lending CRM & <br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-amber-200">
-                Direct Bank Intermediary
-              </span>
-            </h1>
-            <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              Connecting 20-agent outbound tele-calling desks directly with tier-1 partner banks.
-              Instant customer credit underwriting, automated KYC docket generation, and real-time loan sanction routing.
-            </p>
-          </div>
-
-          {/* Underwriting Telemetry Grid (Clean, Balanced & Modern) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-left">
-            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Sanction Volume</div>
-              <div className="text-xl font-black text-white font-mono mt-0.5">₹128.4 Cr</div>
-              <div className="text-[10px] text-emerald-400 font-medium mt-0.5">↑ 18.2% this quarter</div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Daily Agent Target</div>
-              <div className="text-xl font-black text-white font-mono mt-0.5">100 Calls</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">Per-rep quota tracker</div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Underwriting</div>
-              <div className="text-xl font-black text-amber-300 font-mono mt-0.5">&lt; 0.4s Route</div>
-              <div className="text-[10px] text-emerald-400 font-medium mt-0.5">Direct ISO-20022</div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-slate-900/85 border border-slate-800 backdrop-blur-md shadow-md">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400">Approval Rate</div>
-              <div className="text-xl font-black text-emerald-400 font-mono mt-0.5">88.4%</div>
-              <div className="text-[10px] text-slate-400 mt-0.5">Across 8 Banks</div>
-            </div>
-          </div>
-
-          {/* Connected Partner Banking Grid Showcase */}
-          <PartnerBanksShowcase variant="compact-dock" theme="dark" />
-        </div>
-
-        {/* Right Column: Expanded High-End Dark Banking Auth Vault Card */}
-        <div ref={cardRef} className="lg:col-span-6 w-full max-w-xl mx-auto">
-          <Card3D variant="obsidian" className="p-8 sm:p-10 space-y-7">
-            {/* Header Title inside Vault */}
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div>
-                <h2 className="text-lg sm:text-xl font-extrabold text-white tracking-tight">
-                  Institutional Access Portal
-                </h2>
-                <p className="text-xs text-slate-400 mt-0.5 font-mono">
-                  Select a pre-configured role or enter credentials
-                </p>
-              </div>
-              <span className="flex items-center gap-1.5 text-[11px] font-mono text-amber-300 bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/30">
-                <Zap className="h-3 w-3" /> 1-Click Ready
-              </span>
-            </div>
-
-            {/* Persona Quick Dock - Generous, Comfortable Sizing */}
-            <div className="space-y-3">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider font-mono">
-                Simulation Roles
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {DEMO_PERSONAS.map((p) => {
-                  const isSelected = selectedPersona === p.id
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => handleSelectPersona(p)}
-                      className={`flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all duration-200 ${
-                        isSelected
-                          ? 'bg-slate-800 text-white border-amber-400/90 shadow-lg ring-1 ring-amber-400/30'
-                          : 'bg-slate-950/60 hover:bg-slate-850 border-slate-800 text-slate-300 hover:border-slate-700'
-                      }`}
-                    >
-                      <div
-                        className={`p-2 rounded-xl shrink-0 mt-0.5 ${
-                          isSelected
-                            ? 'bg-amber-400 text-slate-950 shadow-sm'
-                            : 'bg-slate-800 text-slate-400 border border-slate-700'
-                        }`}
-                      >
-                        {p.icon}
-                      </div>
-                      <div className="truncate flex-1">
-                        <div className="flex items-center justify-between">
-                          <span className="font-bold text-sm text-white truncate">{p.label}</span>
-                          <span
-                            className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                              isSelected
-                                ? 'bg-amber-400/20 text-amber-300 border border-amber-400/40'
-                                : 'bg-slate-800 text-slate-400'
-                            }`}
-                          >
-                            {p.badge}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-400 mt-1 line-clamp-1 leading-tight">
-                          {p.description}
-                        </div>
-                      </div>
-                    </button>
-                  )
-                })}
+      {/* Main Centered Container */}
+      <div className="relative z-10 w-full max-w-[440px] flex flex-col items-center my-auto">
+        {/* Brand Header: Logo Mark + Wordmark */}
+        <div className="flex flex-col items-center text-center mb-6">
+          <div className="flex items-center gap-2.5 mb-3">
+            {/* Logo Mark: Indigo Crest with Tiny Gold Accent */}
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.35)] border border-indigo-400/30">
+              <div className="relative flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
+                {/* Tiny Gold Accent Dot */}
+                <span className="absolute w-2 h-2 rounded-full bg-[#F5C451] shadow-[0_0_6px_#F5C451] -top-0.5 -right-0.5" />
               </div>
             </div>
+            <span className="text-2xl font-bold tracking-tight text-white">LoanFlow</span>
+          </div>
 
-            {/* Error Message Banner */}
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-white">
+            Welcome back
+          </h1>
+          <p className="text-sm text-[#94A3B8] font-normal mt-1">
+            Sign in to your lending workspace
+          </p>
+        </div>
+
+        {/* Hero Login Card with Gradient Glow Ring */}
+        <div className="relative w-full">
+          {/* Subtle Indigo-to-Cyan Ambient Glow Behind Card */}
+          <div
+            className="absolute -inset-1 rounded-3xl opacity-25 blur-[80px] pointer-events-none"
+            style={{
+              background: 'linear-gradient(135deg, #6366F1 0%, #22D3EE 100%)',
+            }}
+          />
+
+          {/* Glassmorphism Card Surface */}
+          <div className="relative rounded-3xl p-6 sm:p-8 bg-white/[0.04] backdrop-blur-xl border border-white/[0.10] shadow-[0_20px_50px_rgba(0,0,0,0.55)] animate-card-entrance space-y-6">
+            {/* Role Selector Tabs on Top */}
+            <RoleTabs
+              selectedRole={selectedPersona}
+              onSelectRole={handleRoleChange}
+            />
+
+            {/* Error Message */}
             {error && (
-              <div className="p-3.5 bg-rose-950/60 border border-rose-800 rounded-2xl text-xs text-rose-200 flex items-center gap-2.5">
-                <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-                <span>{error}</span>
+              <div
+                role="alert"
+                className="p-3.5 bg-rose-500/10 border border-rose-500/25 rounded-xl text-xs text-[#F87171] flex items-center gap-2.5"
+              >
+                <AlertCircle className="w-4 h-4 shrink-0 text-[#F87171]" />
+                <span className="font-medium">{error}</span>
               </div>
             )}
 
-            {/* Form */}
+            {/* Dismissible Demo Access Banner */}
+            {showDemoNote && (
+              <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-xl text-xs text-slate-300 flex items-center justify-between gap-2">
+                <span className="truncate">
+                  <strong className="text-indigo-300 font-medium">Demo access:</strong> Password is{' '}
+                  <code className="text-white font-mono bg-white/10 px-1 py-0.5 rounded">
+                    Password123!
+                  </code>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowDemoNote(false)}
+                  aria-label="Dismiss demo notice"
+                  className="p-1 text-slate-400 hover:text-white rounded transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2 font-mono">
-                  Corporate Email ID
+              {/* Corporate Email Field */}
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="work-email"
+                  className="block text-xs font-medium text-[#94A3B8]"
+                >
+                  Email address
                 </label>
                 <div className="relative">
-                  <Mail className="h-4 w-4 absolute left-4 top-3.5 text-slate-400 pointer-events-none" />
+                  <Mail className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
+                    id="work-email"
                     type="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@loanflow.demo"
+                    placeholder="name@company.com"
                     required
-                    className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all font-mono"
+                    className="w-full h-[52px] bg-white/[0.03] border border-white/[0.10] rounded-xl pl-11 pr-4 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1] transition-all font-sans"
                   />
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
-                    Session Password
+              {/* Password Field */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label
+                    htmlFor="work-password"
+                    className="block text-xs font-medium text-[#94A3B8]"
+                  >
+                    Password
                   </label>
-                  <span className="text-[11px] text-amber-300/80 font-mono">Default: Password123!</span>
+                  <a
+                    href="#forgot-password"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      alert('For assessment demo, use Password123! or select any role tab above.')
+                    }}
+                    className="text-xs text-[#818CF8] hover:text-[#22D3EE] transition-colors focus:outline-none focus:underline"
+                  >
+                    Forgot password?
+                  </a>
                 </div>
                 <div className="relative">
-                  <Lock className="h-4 w-4 absolute left-4 top-3.5 text-slate-400 pointer-events-none" />
+                  <Lock className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
+                    id="work-password"
                     type={showPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="w-full bg-slate-950/80 border border-slate-700/80 rounded-xl pl-11 pr-11 py-3 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/30 transition-all font-mono"
+                    className="w-full h-[52px] bg-white/[0.03] border border-white/[0.10] rounded-xl pl-11 pr-11 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6366F1] focus:border-[#6366F1] transition-all font-sans"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3 text-slate-400 hover:text-white p-1 focus:outline-none transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 focus:outline-none transition-colors"
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
+              {/* Remember Me Checkbox */}
+              <div className="flex items-center pt-0.5">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-[#94A3B8] hover:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="w-4 h-4 rounded border-white/20 bg-white/5 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0 transition-colors"
+                  />
+                  <span>Remember me on this device</span>
+                </label>
+              </div>
+
+              {/* Primary Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 px-6 rounded-xl text-sm font-extrabold text-slate-950 bg-gradient-to-r from-white via-slate-100 to-slate-200 hover:from-slate-100 hover:to-white active:scale-[0.99] shadow-lg flex items-center justify-center gap-2 transition-all duration-150 disabled:opacity-50 mt-2"
+                className="w-full h-[52px] rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-[#6366F1] via-indigo-600 to-[#818CF8] hover:opacity-95 active:scale-[0.99] shadow-[0_4px_24px_rgba(99,102,241,0.35)] flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 mt-1 cursor-pointer"
               >
                 {isLoading ? (
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-4 w-4 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
-                    <span>Authorizing Session...</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Signing in...</span>
                   </div>
                 ) : (
-                  <>
-                    <span>
-                      Launch{' '}
-                      {selectedPersona === 'mobile-admin'
-                        ? 'Mobile Admin'
-                        : selectedPersona === 'admin'
-                        ? 'Admin Suite'
-                        : 'Call Centre Portal'}
-                    </span>
-                    <ArrowRight className="h-4 w-4" />
-                  </>
+                  <span>Sign in</span>
                 )}
               </button>
             </form>
 
-            {/* Footer Telemetry Badge */}
-            <div className="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-              <span className="flex items-center gap-2">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-ping" />
-                <span className="text-slate-300">Supabase PostgreSQL 15+</span>
-              </span>
-              <span className="font-mono text-slate-500">JWT • RBAC • Render API</span>
+            {/* Quiet Encryption Assurance */}
+            <div className="pt-1 flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+              <Lock className="w-3 h-3 text-slate-500" />
+              <span>Secured with 256-bit encryption</span>
             </div>
-          </Card3D>
+          </div>
         </div>
-      </main>
 
-      {/* Bottom Full-Width Partner Banks Marquee Ticker */}
-      <footer className="relative z-10 w-full max-w-7xl mx-auto pt-4 border-t border-slate-800/80">
-        <PartnerBanksShowcase variant="ticker" theme="dark" />
-      </footer>
+        {/* Quiet Footer: Single row of grayscale bank logos */}
+        <div className="flex flex-col items-center gap-2.5 pt-8 text-center">
+          <span className="text-xs text-slate-500 font-normal">
+            Trusted by 8 partner banks
+          </span>
+          <div className="flex items-center justify-center gap-4 sm:gap-5 opacity-40 hover:opacity-75 transition-opacity duration-300 grayscale">
+            {PARTNER_BANK_KEYS.map((bankKey) => (
+              <div
+                key={bankKey}
+                className="w-5 h-5 flex items-center justify-center"
+                title={bankKey.toUpperCase()}
+              >
+                <BankLogo bank={bankKey} variant="icon" size="sm" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

@@ -7,6 +7,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        fintech: {
+          base: '#060B1A',
+          layer: '#0B1226',
+          card: 'rgba(255, 255, 255, 0.04)',
+          border: 'rgba(255, 255, 255, 0.10)',
+          indigo: '#6366F1',
+          'indigo-hover': '#818CF8',
+          cyan: '#22D3EE',
+          emerald: '#34D399',
+          textPrimary: '#F8FAFC',
+          textSecondary: '#94A3B8',
+          error: '#F87171',
+          gold: '#F5C451',
+        },
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',
@@ -84,8 +98,18 @@ export default {
         'slide-up': 'slideUp 0.3s ease-out',
         'scale-in': 'scaleIn 0.2s ease-out',
         'spin-slow': 'spin 2s linear infinite',
+        'card-entrance': 'cardEntrance 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'gradient-border': 'gradientBorder 8s ease infinite',
       },
       keyframes: {
+        cardEntrance: {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        gradientBorder: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
